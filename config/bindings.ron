@@ -1,0 +1,9 @@
+(
+  axes: {
+    "x_axis": Emulated(pos: Key(D), neg: Key(A)),
+    "y_axis": Emulated(pos: Key(W), neg: Key(S)),
+  },
+  actions: {
+    "toggle_colliders": [[Key(F2)]]
+  },
+)
