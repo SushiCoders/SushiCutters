@@ -4,6 +4,7 @@ use amethyst::{core::transform::Transform, prelude::*, renderer::Camera};
 
 use crate::components::initialize_player;
 use crate::components::CircleCollider;
+use crate::components::Health;
 
 // Maybe make these into a resouce?
 pub const ARENA_HEIGHT: f32 = 100.0;
@@ -24,11 +25,14 @@ pub fn initialise_raw_colliders(world: &mut World) {
     left_transform.set_translation_xyz(CIRCLE_SIZE, y, 0.0);
     right_transform.set_translation_xyz(ARENA_WIDTH - CIRCLE_SIZE, y, 0.0);
 
+    let health = Health { amount: 10.0 };
+
     world
         .create_entity()
         .with(CircleCollider {
             radius: CIRCLE_SIZE,
         })
+        .with(health.clone())
         .with(right_transform)
         .build();
 
@@ -37,6 +41,7 @@ pub fn initialise_raw_colliders(world: &mut World) {
         .with(CircleCollider {
             radius: CIRCLE_SIZE,
         })
+        .with(health)
         .with(left_transform)
         .build();
 }

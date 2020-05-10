@@ -57,6 +57,11 @@ fn main() -> amethyst::Result<()> {
             &["player_movement"],
         )
         .with(
+            systems::DamageSystem,
+            "damage_system",
+            &["collisions_system"],
+        )
+        .with(
             systems::CollisionDebugSystem,
             "collision_debug",
             &["collisions_system", "input_system"],

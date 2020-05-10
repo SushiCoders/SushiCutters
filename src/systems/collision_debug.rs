@@ -15,6 +15,8 @@ pub struct CollisionDebugState {
     down: bool,
 }
 
+// This may be removed or specified in a config file
+// I just want the colliders to be shown by default for now
 impl Default for CollisionDebugState {
     fn default() -> Self {
         Self {

@@ -41,6 +41,8 @@ impl<'s> System<'s> for PlayerMovementSystem {
                 // Normalize so that diagonals aren't faster than cardinals
                 // Then multiply by speed and finally by the timestep
                 // To make sure the game isn't tied to the framerate
+                //
+                // Maybe should refactor to use try_normalize instead
                 let movement = Vector3::from([x_movement, y_movement, 0.]).normalize()
                     * player.speed
                     // When this is moved over to fixed dispatch
