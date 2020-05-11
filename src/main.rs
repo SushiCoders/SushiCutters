@@ -57,6 +57,11 @@ fn main() -> amethyst::Result<()> {
             &["player_control"],
         )
         .with(
+            systems::KillAfterSystem,
+            "kill_after_system",
+            &["collisions_system"],
+        )
+        .with(
             systems::DamageSystem,
             "damage_system",
             &["collisions_system"],

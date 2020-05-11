@@ -1,11 +1,6 @@
 ///! Core SushiCutters module
 ///! There is a bit of code that was taken from the pong example which will be phased out in time
-use amethyst::{
-    core::{math::Vector3, shrev::EventChannel, transform::Transform},
-    ecs::prelude::*,
-    prelude::*,
-    renderer::Camera,
-};
+use amethyst::{core::transform::Transform, ecs::prelude::*, prelude::*, renderer::Camera};
 
 use crate::components::initialize_player;
 use crate::components::CircleCollider;
@@ -14,15 +9,6 @@ use crate::components::Health;
 // Maybe make these into a resouce?
 pub const ARENA_HEIGHT: f32 = 100.0;
 pub const ARENA_WIDTH: f32 = 100.0;
-
-#[derive(Debug)]
-pub enum RuntimeEntity {
-    Swing {
-        position: Vector3<f32>,
-        damage: f32,
-        parent: Entity,
-    },
-}
 
 /// TEMP: Colliders should always have a purpose/other components
 /// Hardcoded for testing purposes
