@@ -3,6 +3,7 @@ name = "sushi_cutters"
 version = "0.1.0"
 authors = []
 edition = "2018"
+license = "Apache-2.0"
 
 [dependencies]
 amethyst = "0.15.0"
