@@ -4,6 +4,7 @@
     "y_axis": Emulated(pos: Key(W), neg: Key(S)),
   },
   actions: {
-    "toggle_colliders": [[Key(F2)]]
+    "toggle_colliders": [[Key(F2)]],
+    "attack": [[Key(Space)]],
   },
 )

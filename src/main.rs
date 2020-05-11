@@ -47,14 +47,14 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(UiBundle::<StringBindings>::new())?
         .with_bundle(AudioBundle::default())?
         .with(
-            systems::PlayerMovementSystem,
-            "player_movement",
+            systems::PlayerControlSystem,
+            "player_control",
             &["input_system"],
         )
         .with(
             systems::CollisionsSystem,
             "collisions_system",
-            &["player_movement"],
+            &["player_control"],
         )
         .with(
             systems::DamageSystem,

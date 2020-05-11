@@ -3347,7 +3347,6 @@ name = "sushi_cutters"
 version = "0.1.0"
 dependencies = [
  "amethyst",
- "nalgebra",
 ]
 
 [[package]]

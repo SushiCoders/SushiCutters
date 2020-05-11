@@ -24,7 +24,7 @@ impl<'s> System<'s> for DamageSystem {
                 if let Some(health) = healths.get_mut(collision.entity) {
                     health.amount -= damage.amount;
 
-                    // If the health of the target is less than 0 delet
+                    // If the health of the target is less than 0 then delet this
                     if health.amount <= 0.0 {
                         println!("{:?} kicked the bucket", collision.entity);
                         entities

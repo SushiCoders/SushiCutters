@@ -1,12 +1,10 @@
 use amethyst::input::{InputHandler, StringBindings};
 use amethyst::{
-    core::Transform,
+    core::{math::geometry::Point3, Transform},
     ecs::prelude::{Join, Read, ReadStorage, System, Write},
     renderer::debug_drawing::DebugLines,
     renderer::palette::Srgba,
 };
-
-use nalgebra::geometry::Point3;
 
 use crate::components::{BoxCollider, CircleCollider, Collisions};
 

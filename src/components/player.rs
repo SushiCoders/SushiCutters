@@ -1,12 +1,15 @@
 use amethyst::{core::transform::Transform, ecs::prelude::*};
 
 use crate::components::colliders;
-use crate::components::Damage;
 
 /// Component that represents a player controlled entity
 /// Uses the x and y axes defined in the bindings config for movement
+///
+/// speed is the entities movement speed
+/// nextAttack is the next time the player can attack, used for attack cooldown
 pub struct Player {
     pub speed: f32,
+    pub next_attack: f64,
 }
 
 impl Component for Player {
@@ -19,11 +22,10 @@ pub fn initialize_player(world: &mut World) {
     world
         .create_entity()
         .with(transform)
-        .with(colliders::BoxCollider {
-            width: 10.0,
-            height: 10.0,
+        .with(colliders::CircleCollider { radius: 5.0 })
+        .with(Player {
+            speed: 50.0,
+            next_attack: 0.0,
         })
-        .with(Damage { amount: 1.0 })
-        .with(Player { speed: 50.0 })
         .build();
 }
