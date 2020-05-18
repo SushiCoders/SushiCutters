@@ -1,10 +1,11 @@
 //! Stolen almost in it's entirety from pong
 use amethyst::{
-    core::Transform,
+    core::{math::Vector3, Transform},
     ecs::prelude::{Entities, Entity, Join, ReadStorage, System, WriteStorage},
 };
 
 use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions};
+use crate::util::transform::global_translation;
 
 pub struct CollisionsSystem;
 
@@ -26,13 +27,17 @@ impl<'s> System<'s> for CollisionsSystem {
         // We also check for the velocity of the ball every time, to prevent multiple collisions
         // from occurring.
         for (circle_entity, circle, circle_transform) in (&entities, &circles, &transforms).join() {
-            let circle_x = circle_transform.translation().x;
-            let circle_y = circle_transform.translation().y;
+            let translation = global_translation(circle_transform);
+            let circle_x = translation.x;
+            let circle_y = translation.y;
 
             // Bounce at the paddles.
             for (box_entity, box_col, box_transform) in (&entities, &boxes, &transforms).join() {
-                let box_x = box_transform.translation().x - (box_col.width * 0.5);
-                let box_y = box_transform.translation().y - (box_col.height * 0.5);
+                let translation = global_translation(box_transform);
+                let half_box = Vector3::new(box_col.width / 2f32, box_col.height / 2f32, 0.0);
+                let top_left = translation - half_box;
+                let box_x = top_left.x;
+                let box_y = top_left.y;
 
                 // To determine whether the ball has collided with a paddle, we create a larger
                 // rectangle around the current one, by subtracting the ball radius from the
