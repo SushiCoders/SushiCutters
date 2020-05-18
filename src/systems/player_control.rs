@@ -3,6 +3,7 @@ use amethyst::{
     ecs::prelude::*,
     input::{InputHandler, StringBindings},
 };
+use std::process;
 
 use crate::components::{BoxCollider, Damage, KillAfterCollision, KillAfterTime, Player};
 
@@ -71,9 +72,11 @@ impl<'s> System<'s> for PlayerControlSystem {
             // Custom bindings might be better for the future but right now
             // this is good enough
             // https://book.amethyst.rs/stable/input/how_to_define_custom_control_bindings.html
+            if let Some(should_quit) = input.action_is_down("quit"){
+                should_quit && process::exit(0);
+            }
             let x_movement = input.axis_value("x_axis").unwrap_or(0.);
             let y_movement = input.axis_value("y_axis").unwrap_or(0.);
-
             // Normalizing a vector of length 0 will result in a panic
             // Not very rusty but we have to check to make sure the movement isn't
             // (0.0, 0.0)

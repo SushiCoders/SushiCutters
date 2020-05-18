@@ -6,5 +6,6 @@
   actions: {
     "toggle_colliders": [[Key(F2)]],
     "attack": [[Key(Space)]],
+    "quit": [[Key(Q)]],
   },
 )
