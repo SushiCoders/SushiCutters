@@ -124,8 +124,6 @@ impl<'s> System<'s> for PlayerControlSystem {
                 height: swing.dimensions[1],
             };
 
-            // Right now I can't get parent to work properly
-            // Will look back into it
             let parent = Parent::new(swing.parent);
 
             entities
