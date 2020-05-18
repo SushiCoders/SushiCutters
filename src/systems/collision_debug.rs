@@ -1,6 +1,9 @@
 use amethyst::input::{InputHandler, StringBindings};
 use amethyst::{
-    core::{math::geometry::Point3, Transform},
+    core::{
+        math::{geometry::Point3, Matrix4},
+        Transform,
+    },
     ecs::prelude::{Join, Read, ReadStorage, System, Write},
     renderer::debug_drawing::DebugLines,
     renderer::palette::Srgba,
@@ -60,8 +63,13 @@ impl<'s> System<'s> for CollisionDebugSystem {
         let red = Srgba::new(0.7, 0.2, 0.2, 1.0);
         let green = Srgba::new(0.2, 0.7, 0.2, 1.0);
         for (circle, transform, collision) in (&circles, &transforms, collisions.maybe()).join() {
-            let circle_x = transform.translation().x;
-            let circle_y = transform.translation().y;
+            // TODO: Create helper functions to get the global translation out of a global matrix
+            let transform: &Transform = transform;
+            let matrix: &Matrix4<f32> = transform.global_matrix();
+            let translation = matrix.column(3);
+            let circle_x = translation[0];
+            let circle_y = translation[1];
+
             let circle_point = Point3::new(circle_x, circle_y, 0.0);
 
             let color = if let Some(_) = collision { red } else { green };
@@ -71,8 +79,12 @@ impl<'s> System<'s> for CollisionDebugSystem {
 
         for (box_collider, transform, collision) in (&boxes, &transforms, collisions.maybe()).join()
         {
-            let box_x = transform.translation().x - box_collider.width / 2f32;
-            let box_y = transform.translation().y - box_collider.height / 2f32;
+            let transform: &Transform = transform;
+            let matrix: &Matrix4<f32> = transform.global_matrix();
+            let translation = matrix.column(3);
+
+            let box_x = translation[0] - box_collider.width / 2f32;
+            let box_y = translation[1] - box_collider.height / 2f32;
             let box_start = Point3::new(box_x, box_y, 0.0);
             let box_end = Point3::new(box_x + box_collider.width, box_y + box_collider.height, 0.0);
 
