@@ -14,6 +14,7 @@ use amethyst::{
 mod components;
 mod sushi_cutters;
 mod systems;
+mod util;
 
 use crate::sushi_cutters::SushiCutters;
 
@@ -42,19 +43,19 @@ fn main() -> amethyst::Result<()> {
                 .with_plugin(RenderFlat2D::default())
                 .with_plugin(RenderDebugLines::default()),
         )?
-        .with_bundle(TransformBundle::new())?
         .with_bundle(input_bundle)?
-        .with_bundle(UiBundle::<StringBindings>::new())?
-        .with_bundle(AudioBundle::default())?
         .with(
             systems::PlayerControlSystem,
             "player_control",
             &["input_system"],
         )
+        .with_bundle(TransformBundle::new().with_dep(&["player_control"]))?
+        .with_bundle(UiBundle::<StringBindings>::new())?
+        .with_bundle(AudioBundle::default())?
         .with(
             systems::CollisionsSystem,
             "collisions_system",
-            &["player_control"],
+            &["transform_system"],
         )
         .with(
             systems::KillAfterSystem,

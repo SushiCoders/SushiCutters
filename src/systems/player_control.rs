@@ -98,11 +98,7 @@ impl<'s> System<'s> for PlayerControlSystem {
                 if attack && player.next_attack <= time.absolute_time_seconds() {
                     player.next_attack = time.absolute_time_seconds() + TIME_TO_ATTACK;
 
-                    let attack_location = Vector3::from([
-                        transform.translation().x,
-                        transform.translation().y + ATTACK_BOX_SIZE[1] + 0.1,
-                        0.0,
-                    ]);
+                    let attack_location = Vector3::from([0.0, ATTACK_BOX_SIZE[1] + 0.1, 0.0]);
 
                     // Add a new swing to the vec
                     // Can't generate a new entity while we are already joining
@@ -128,8 +124,6 @@ impl<'s> System<'s> for PlayerControlSystem {
                 height: swing.dimensions[1],
             };
 
-            // Right now I can't get parent to work properly
-            // Will look back into it
             let parent = Parent::new(swing.parent);
 
             entities
