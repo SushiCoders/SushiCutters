@@ -12,10 +12,11 @@ use amethyst::{
 };
 
 mod components;
+mod input;
 mod sushi_cutters;
 mod systems;
 mod util;
-
+use crate::input::bindings::InputBindingTypes;
 use crate::sushi_cutters::SushiCutters;
 
 fn main() -> amethyst::Result<()> {
@@ -28,9 +29,9 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = config_dir.join("display.ron");
     let bindings_path = config_dir.join("bindings.ron");
 
-    use amethyst::input::{InputBundle, StringBindings};
+    use amethyst::input::InputBundle;
     let input_bundle =
-        InputBundle::<StringBindings>::new().with_bindings_from_file(bindings_path)?;
+        InputBundle::<InputBindingTypes>::new().with_bindings_from_file(bindings_path)?;
 
     let game_data = GameDataBuilder::default()
         .with_bundle(
@@ -50,7 +51,7 @@ fn main() -> amethyst::Result<()> {
             &["input_system"],
         )
         .with_bundle(TransformBundle::new().with_dep(&["player_control"]))?
-        .with_bundle(UiBundle::<StringBindings>::new())?
+        .with_bundle(UiBundle::<InputBindingTypes>::new())?
         .with_bundle(AudioBundle::default())?
         .with(
             systems::CollisionsSystem,
