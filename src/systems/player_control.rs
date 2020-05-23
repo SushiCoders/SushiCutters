@@ -1,10 +1,10 @@
+use crate::components::{BoxCollider, Damage, KillAfterCollision, KillAfterTime, Player};
+use crate::input::bindings::{ActionBinding, AxisBinding, InputBindingTypes};
 use amethyst::{
     core::{math::Vector3, Parent, Time, Transform},
     ecs::prelude::*,
-    input::{InputHandler, StringBindings},
+    input::InputHandler,
 };
-
-use crate::components::{BoxCollider, Damage, KillAfterCollision, KillAfterTime, Player};
 
 pub struct PlayerControlSystem;
 
@@ -12,7 +12,7 @@ type PlayerControlSystemData<'s> = (
     // Actual system
     WriteStorage<'s, Transform>,
     WriteStorage<'s, Player>,
-    Read<'s, InputHandler<StringBindings>>,
+    Read<'s, InputHandler<InputBindingTypes>>,
     Read<'s, Time>,
     // Swing generation
     Entities<'s>,
@@ -71,8 +71,8 @@ impl<'s> System<'s> for PlayerControlSystem {
             // Custom bindings might be better for the future but right now
             // this is good enough
             // https://book.amethyst.rs/stable/input/how_to_define_custom_control_bindings.html
-            let x_movement = input.axis_value("x_axis").unwrap_or(0.);
-            let y_movement = input.axis_value("y_axis").unwrap_or(0.);
+            let x_movement = input.axis_value(&AxisBinding::Horizontal).unwrap_or(0.);
+            let y_movement = input.axis_value(&AxisBinding::Vertical).unwrap_or(0.);
 
             // Normalizing a vector of length 0 will result in a panic
             // Not very rusty but we have to check to make sure the movement isn't
@@ -92,7 +92,7 @@ impl<'s> System<'s> for PlayerControlSystem {
             }
 
             // This has to be two nested ifs because of the way that let matching works
-            if let Some(attack) = input.action_is_down("attack") {
+            if let Some(attack) = input.action_is_down(&ActionBinding::Attack) {
                 // If the button is down and the time to next attack is less than
                 // what is in the struct
                 if attack && player.next_attack <= time.absolute_time_seconds() {
