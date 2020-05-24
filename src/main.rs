@@ -13,7 +13,6 @@ use amethyst::{
 
 mod components;
 mod input;
-mod mob;
 mod sushi_cutters;
 mod systems;
 mod util;

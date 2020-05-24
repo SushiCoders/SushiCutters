@@ -5,7 +5,7 @@ use amethyst::{
     ecs::prelude::{Join, Read, ReadStorage, System, SystemData, WriteStorage},
 };
 
-use crate::mob::enemy::Enemy;
+use crate::components::Enemy;
 
 #[derive(SystemDesc)]
 pub struct MoveEnemiesSystem;

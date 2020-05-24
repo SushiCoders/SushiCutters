@@ -11,8 +11,7 @@ use amethyst::{
 
 use crate::input::bindings::{ActionBinding, InputBindingTypes};
 
-use crate::components::{BoxCollider, CircleCollider, Collisions};
-use crate::mob::enemy::Enemy;
+use crate::components::{BoxCollider, CircleCollider, Collisions, Enemy};
 use crate::util::transform::global_translation;
 
 pub struct CollisionDebugState {
