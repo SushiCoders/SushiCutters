@@ -1,9 +1,9 @@
-use super::{Health, Velocity};
+use super::{CircleCollider, Health, Velocity};
 use crate::sushi_cutters::{ARENA_HEIGHT, ARENA_WIDTH};
 use amethyst::{
     core::{math::Vector3, transform::Transform},
     ecs::{
-        prelude::{Component, DenseVecStorage},
+        prelude::{Component, NullStorage},
         World,
     },
     prelude::*,
@@ -11,11 +11,10 @@ use amethyst::{
 
 pub const HITCIRCLE_RADIUS: f32 = 4.0;
 
-pub struct Enemy {
-    pub radius: f32,
-}
+#[derive(Default)]
+pub struct Enemy;
 impl Component for Enemy {
-    type Storage = DenseVecStorage<Self>;
+    type Storage = NullStorage<Self>;
 }
 
 pub fn spawn_enemy(world: &mut World, enemy_x: f32, enemy_y: f32, x_vel: f32, y_vel: f32) {
@@ -24,9 +23,10 @@ pub fn spawn_enemy(world: &mut World, enemy_x: f32, enemy_y: f32, x_vel: f32, y_
     t.set_translation_xyz(enemy_x, enemy_y, 0.0);
     world
         .create_entity()
-        .with(Enemy {
+        .with(CircleCollider {
             radius: HITCIRCLE_RADIUS,
         })
+        .with(Enemy)
         .with(Velocity {
             velocity: Vector3::new(x_vel, y_vel, 0.0),
         })
