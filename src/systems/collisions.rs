@@ -6,7 +6,6 @@ use amethyst::{
 
 use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions};
 use crate::util::transform::global_translation;
-
 pub struct CollisionsSystem;
 
 impl<'s> System<'s> for CollisionsSystem {

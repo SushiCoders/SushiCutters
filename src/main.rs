@@ -1,3 +1,5 @@
+#![deny(clippy::all)]
+
 use amethyst::audio::AudioBundle;
 use amethyst::ui::{RenderUi, UiBundle};
 use amethyst::{
@@ -50,12 +52,18 @@ fn main() -> amethyst::Result<()> {
             "player_control",
             &["input_system"],
         )
-        .with_bundle(TransformBundle::new().with_dep(&["player_control"]))?
+        .with(systems::VelocitySystem, "velocity_system", &[])
+        .with_bundle(TransformBundle::new().with_dep(&["player_control", "velocity_system"]))?
         .with_bundle(UiBundle::<InputBindingTypes>::new())?
         .with_bundle(AudioBundle::default())?
         .with(
             systems::CollisionsSystem,
             "collisions_system",
+            &["transform_system"],
+        )
+        .with(
+            systems::BorderSystem,
+            "border_system",
             &["transform_system"],
         )
         .with(

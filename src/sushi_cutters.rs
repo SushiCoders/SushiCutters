@@ -1,10 +1,8 @@
 ///! Core SushiCutters module
 ///! There is a bit of code that was taken from the pong example which will be phased out in time
 use amethyst::{core::transform::Transform, ecs::prelude::*, prelude::*, renderer::Camera};
-
-use crate::components::initialize_player;
-use crate::components::CircleCollider;
-use crate::components::Health;
+extern crate rand;
+use crate::components::{initialize_player, initialize_enemies, CircleCollider, Health};
 
 // Maybe make these into a resouce?
 pub const ARENA_HEIGHT: f32 = 100.0;
@@ -23,7 +21,6 @@ pub fn initialise_raw_colliders(world: &mut World) {
     right_transform.set_translation_xyz(ARENA_WIDTH - CIRCLE_SIZE, y, 0.0);
 
     let health = Health { amount: 10.0 };
-
     world
         .create_entity()
         .with(CircleCollider {
@@ -63,7 +60,11 @@ impl SimpleState for SushiCutters {
         let world = data.world;
 
         initialise_camera(world);
-        initialise_raw_colliders(world);
+        if cfg!(feature = "enemies") {
+            initialize_enemies(world);
+        } else {
+            initialise_raw_colliders(world);
+        }
         initialize_player(world);
     }
 }
