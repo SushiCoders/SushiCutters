@@ -8,8 +8,6 @@ impl Component for KillAfterCollision {
     type Storage = NullStorage<Self>;
 }
 
-// Timings should probably be using durations
-// But I didn't feel like learning something new
 pub struct KillAfterTime {
     pub time: f64,
 }

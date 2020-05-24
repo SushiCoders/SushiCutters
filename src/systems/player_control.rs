@@ -33,9 +33,6 @@ impl<'s> System<'s> for PlayerControlSystem {
     // This is also a simplistic view of how movement should be handled
     // Subject to change in the future
     // The goal with this one is to get something up and running
-    //
-    // This should also be moved to a fixed update dispatcher
-    // https://book.amethyst.rs/stable/concepts/state.html#life-cycle
     fn run(
         &mut self,
         (
@@ -49,9 +46,6 @@ impl<'s> System<'s> for PlayerControlSystem {
         ): Self::SystemData,
     ) {
         for (entity, transform, player) in (&entities, &mut transforms, &mut players).join() {
-            // Custom bindings might be better for the future but right now
-            // this is good enough
-            // https://book.amethyst.rs/stable/input/how_to_define_custom_control_bindings.html
             let x_movement = input.axis_value(&AxisBinding::Horizontal).unwrap_or(0.);
             let y_movement = input.axis_value(&AxisBinding::Vertical).unwrap_or(0.);
 

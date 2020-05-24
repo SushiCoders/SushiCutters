@@ -30,7 +30,6 @@ impl<'s> System<'s> for CollisionsSystem {
             let circle_x = translation.x;
             let circle_y = translation.y;
 
-            // Bounce at the paddles.
             for (box_entity, box_col, box_transform) in (&entities, &boxes, &transforms).join() {
                 let translation = global_translation(box_transform);
                 let half_box = Vector3::new(box_col.width / 2_f32, box_col.height / 2_f32, 0.0);
