@@ -50,7 +50,8 @@ fn main() -> amethyst::Result<()> {
             "player_control",
             &["input_system"],
         )
-        .with_bundle(TransformBundle::new().with_dep(&["player_control"]))?
+        .with(systems::VelocitySystem, "velocity_system", &[])
+        .with_bundle(TransformBundle::new().with_dep(&["player_control", "velocity_system"]))?
         .with_bundle(UiBundle::<InputBindingTypes>::new())?
         .with_bundle(AudioBundle::default())?
         .with(
@@ -58,26 +59,25 @@ fn main() -> amethyst::Result<()> {
             "collisions_system",
             &["transform_system"],
         )
-        .with(systems::MoveEnemiesSystem, "enemy_system", &[])
         .with(
             systems::BorderSystem,
-            "move_enemy_system",
-            &["enemy_system"],
+            "border_system",
+            &["transform_system"],
         )
         .with(
             systems::KillAfterSystem,
             "kill_after_system",
-            &["collisions_system", "move_enemy_system"],
+            &["collisions_system"],
         )
         .with(
             systems::DamageSystem,
             "damage_system",
-            &["collisions_system", "move_enemy_system"],
+            &["collisions_system"],
         )
         .with(
             systems::CollisionDebugSystem,
             "collision_debug",
-            &["collisions_system", "input_system", "move_enemy_system"],
+            &["collisions_system", "input_system"],
         );
 
     let mut game = Application::new(assets_dir, SushiCutters::default(), game_data)?;

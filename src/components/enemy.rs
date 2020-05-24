@@ -1,7 +1,7 @@
-use super::Health;
+use super::{Health, Velocity};
 use crate::sushi_cutters::{ARENA_HEIGHT, ARENA_WIDTH};
 use amethyst::{
-    core::transform::Transform,
+    core::{math::Vector3, transform::Transform},
     ecs::{
         prelude::{Component, DenseVecStorage},
         World,
@@ -13,7 +13,6 @@ pub const HITCIRCLE_RADIUS: f32 = 4.0;
 
 pub struct Enemy {
     pub radius: f32,
-    pub velocity: (f32, f32),
 }
 impl Component for Enemy {
     type Storage = DenseVecStorage<Self>;
@@ -27,7 +26,9 @@ pub fn spawn_enemy(world: &mut World, enemy_x: f32, enemy_y: f32, x_vel: f32, y_
         .create_entity()
         .with(Enemy {
             radius: HITCIRCLE_RADIUS,
-            velocity: (x_vel, y_vel),
+        })
+        .with(Velocity {
+            velocity: Vector3::new(x_vel, y_vel, 0.0),
         })
         .with(Health { amount: 10.0 })
         .with(t)
