@@ -19,7 +19,7 @@ impl<'s> System<'s> for BorderSystem {
         ReadStorage<'s, Transform>,
     );
     fn run(&mut self, (enemies, mut velocities, colliders, transforms): Self::SystemData) {
-        // Leaving enemy in as a marker trait
+        // Leaving enemy in as a marker trait because otherwise this might affect entities in an unintended way
         // TODO: Rewrite using colliders rather than using the arena.
         for (_, velocity, collider, transform) in
             (&enemies, &mut velocities, &colliders, &transforms).join()
