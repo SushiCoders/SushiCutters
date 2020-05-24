@@ -70,10 +70,20 @@ impl<'s> System<'s> for CollisionDebugSystem {
         let red = Srgba::new(0.7, 0.2, 0.2, 1.0);
         let green = Srgba::new(0.2, 0.7, 0.2, 1.0);
         let blue = Srgba::new(0.1, 0.1, 1.0, 0.5);
-        for (circle, transform, collision) in (&circles, &transforms, collisions.maybe()).join() {
+        for (circle, transform, collision, enemy) in
+            (&circles, &transforms, collisions.maybe(), enemies.maybe()).join()
+        {
             let circle_point = Point3::from(global_translation(transform));
 
-            let color = if collision.is_some() { red } else { green };
+            let color = if collision.is_some() {
+                red
+            } else {
+                if enemy.is_some() {
+                    blue
+                } else {
+                    green
+                }
+            };
 
             debug.draw_circle(circle_point, circle.radius, 20, color);
         }
@@ -89,11 +99,6 @@ impl<'s> System<'s> for CollisionDebugSystem {
             let color = if collision.is_some() { red } else { green };
 
             debug.draw_box(box_start, box_end, color);
-        }
-        for (enemy, transform) in (&enemies, &transforms).join() {
-            let circle_point = Point3::from(global_translation(transform));
-
-            debug.draw_circle(circle_point, enemy.radius, 20, blue);
         }
     }
 }
