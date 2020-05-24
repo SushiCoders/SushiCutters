@@ -13,6 +13,7 @@ use amethyst::{
 
 mod components;
 mod input;
+mod mob;
 mod sushi_cutters;
 mod systems;
 mod util;
@@ -58,20 +59,26 @@ fn main() -> amethyst::Result<()> {
             "collisions_system",
             &["transform_system"],
         )
+        .with(systems::MoveEnemiesSystem, "enemy_system", &[])
+        .with(
+            systems::BorderSystem,
+            "move_enemy_system",
+            &["enemy_system"],
+        )
         .with(
             systems::KillAfterSystem,
             "kill_after_system",
-            &["collisions_system"],
+            &["collisions_system", "move_enemy_system"],
         )
         .with(
             systems::DamageSystem,
             "damage_system",
-            &["collisions_system"],
+            &["collisions_system", "move_enemy_system"],
         )
         .with(
             systems::CollisionDebugSystem,
             "collision_debug",
-            &["collisions_system", "input_system"],
+            &["collisions_system", "input_system", "move_enemy_system"],
         );
 
     let mut game = Application::new(assets_dir, SushiCutters::default(), game_data)?;

@@ -161,5 +161,5 @@ $RECYCLE.BIN/
 
 # End of https://www.gitignore.io/api/git,vim,rust,linux,macos,windows,clion+all,visualstudiocode
 ## Custom
-# direnv config file
+# direnv
 .envrc

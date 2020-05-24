@@ -12,6 +12,7 @@ use amethyst::{
 use crate::input::bindings::{ActionBinding, InputBindingTypes};
 
 use crate::components::{BoxCollider, CircleCollider, Collisions};
+use crate::mob::enemy::Enemy;
 use crate::util::transform::global_translation;
 
 pub struct CollisionDebugState {
@@ -37,6 +38,7 @@ impl<'s> System<'s> for CollisionDebugSystem {
     type SystemData = (
         ReadStorage<'s, BoxCollider>,
         ReadStorage<'s, CircleCollider>,
+        ReadStorage<'s, Enemy>,
         ReadStorage<'s, Transform>,
         ReadStorage<'s, Collisions>,
         Write<'s, DebugLines>,
@@ -46,7 +48,7 @@ impl<'s> System<'s> for CollisionDebugSystem {
 
     fn run(
         &mut self,
-        (boxes, circles, transforms, collisions, mut debug, mut state, input): Self::SystemData,
+        (boxes, circles, enemies, transforms, collisions, mut debug, mut state, input): Self::SystemData,
     ) {
         let button_down = input
             .action_is_down(&ActionBinding::ToggleColliders)
@@ -68,6 +70,7 @@ impl<'s> System<'s> for CollisionDebugSystem {
 
         let red = Srgba::new(0.7, 0.2, 0.2, 1.0);
         let green = Srgba::new(0.2, 0.7, 0.2, 1.0);
+        let blue = Srgba::new(0.1, 0.1, 1.0, 0.5);
         for (circle, transform, collision) in (&circles, &transforms, collisions.maybe()).join() {
             let circle_point = Point3::from(global_translation(transform));
 
@@ -87,6 +90,11 @@ impl<'s> System<'s> for CollisionDebugSystem {
             let color = if collision.is_some() { red } else { green };
 
             debug.draw_box(box_start, box_end, color);
+        }
+        for (enemy, transform) in (&enemies, &transforms).join() {
+            let circle_point = Point3::from(global_translation(transform));
+
+            debug.draw_circle(circle_point, enemy.radius, 20, blue);
         }
     }
 }
