@@ -4,7 +4,7 @@ use amethyst::{
 };
 
 use crate::{
-    mob::enemy::Enemy,
+    components::Enemy,
     sushi_cutters::{ARENA_HEIGHT, ARENA_WIDTH},
 };
 
