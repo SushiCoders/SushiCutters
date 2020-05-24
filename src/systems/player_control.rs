@@ -2,7 +2,7 @@ use crate::components::{BoxCollider, Damage, KillAfterCollision, KillAfterTime, 
 use crate::input::bindings::{ActionBinding, AxisBinding, InputBindingTypes};
 use amethyst::{
     core::{math::Vector3, Parent, Time, Transform},
-    ecs::prelude::*,
+    ecs::{prelude::*, LazyUpdate},
     input::InputHandler,
 };
 
@@ -10,17 +10,12 @@ pub struct PlayerControlSystem;
 
 type PlayerControlSystemData<'s> = (
     // Actual system
+    Entities<'s>,
     WriteStorage<'s, Transform>,
     WriteStorage<'s, Player>,
     Read<'s, InputHandler<InputBindingTypes>>,
     Read<'s, Time>,
-    // Swing generation
-    Entities<'s>,
-    WriteStorage<'s, BoxCollider>,
-    WriteStorage<'s, Damage>,
-    WriteStorage<'s, KillAfterCollision>,
-    WriteStorage<'s, KillAfterTime>,
-    WriteStorage<'s, Parent>,
+    Read<'s, LazyUpdate>,
 );
 
 // These constants should be attached to either the player or a config file
@@ -28,14 +23,6 @@ const ATTACK_DAMAGE: f32 = 1.0;
 const COLLIDER_TIMEOUT: f64 = 0.1;
 const TIME_TO_ATTACK: f64 = 0.4;
 const ATTACK_BOX_SIZE: [f32; 2] = [10.0, 10.0];
-
-struct Swing {
-    position: Vector3<f32>,
-    damage: f32,
-    lifetime: f64,
-    dimensions: [f32; 2],
-    parent: Entity,
-}
 
 impl<'s> System<'s> for PlayerControlSystem {
     type SystemData = PlayerControlSystemData<'s>;
@@ -52,21 +39,15 @@ impl<'s> System<'s> for PlayerControlSystem {
     fn run(
         &mut self,
         (
+            entities,
             // Player movement and input
             mut transforms,
             mut players,
             input,
             time,
-            // generating the swing
-            entities,
-            mut colliders,
-            mut damages,
-            mut kac,
-            mut kat,
-            mut parents,
+            lazy,
         ): Self::SystemData,
     ) {
-        let mut swings = Vec::new();
         for (entity, transform, player) in (&entities, &mut transforms, &mut players).join() {
             // Custom bindings might be better for the future but right now
             // this is good enough
@@ -100,51 +81,32 @@ impl<'s> System<'s> for PlayerControlSystem {
 
                     let attack_location = Vector3::from([0.0, ATTACK_BOX_SIZE[1] + 0.1, 0.0]);
 
-                    // Add a new swing to the vec
-                    // Can't generate a new entity while we are already joining
-                    // entity and transform so that is done in a loop afterwords
-                    swings.push(Swing {
-                        position: attack_location,
-                        damage: ATTACK_DAMAGE,
-                        lifetime: COLLIDER_TIMEOUT,
-                        dimensions: ATTACK_BOX_SIZE,
-                        parent: entity,
-                    })
+                    let mut transform = Transform::default();
+                    transform.set_translation(attack_location);
+
+                    let collider = BoxCollider {
+                        width: ATTACK_BOX_SIZE[0],
+                        height: ATTACK_BOX_SIZE[1],
+                    };
+
+                    let parent = Parent::new(entity);
+
+                    // Create the swing at the end of the frame instead of trying
+                    // caching it and creating it after this loop
+                    lazy.create_entity(&entities)
+                        .with(parent)
+                        .with(transform)
+                        .with(collider)
+                        .with(Damage {
+                            amount: ATTACK_DAMAGE,
+                        })
+                        .with(KillAfterCollision)
+                        .with(KillAfterTime {
+                            time: time.absolute_time_seconds() + COLLIDER_TIMEOUT,
+                        })
+                        .build();
                 }
             }
-        }
-
-        // For each swing even generated this frame build the swing entity
-        for swing in swings {
-            let mut transform = Transform::default();
-            transform.set_translation(swing.position);
-
-            let collider = BoxCollider {
-                width: swing.dimensions[0],
-                height: swing.dimensions[1],
-            };
-
-            let parent = Parent::new(swing.parent);
-
-            entities
-                .build_entity()
-                .with(parent, &mut parents)
-                .with(transform, &mut transforms)
-                .with(collider, &mut colliders)
-                .with(
-                    Damage {
-                        amount: swing.damage,
-                    },
-                    &mut damages,
-                )
-                .with(KillAfterCollision, &mut kac)
-                .with(
-                    KillAfterTime {
-                        time: time.absolute_time_seconds() + swing.lifetime,
-                    },
-                    &mut kat,
-                )
-                .build();
         }
     }
 }
