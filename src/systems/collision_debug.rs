@@ -77,12 +77,10 @@ impl<'s> System<'s> for CollisionDebugSystem {
 
             let color = if collision.is_some() {
                 red
+            } else if enemy.is_some() {
+                blue
             } else {
-                if enemy.is_some() {
-                    blue
-                } else {
-                    green
-                }
+                green
             };
 
             debug.draw_circle(circle_point, circle.radius, 20, color);

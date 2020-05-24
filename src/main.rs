@@ -1,3 +1,5 @@
+#![deny(clippy::all)]
+
 use amethyst::audio::AudioBundle;
 use amethyst::ui::{RenderUi, UiBundle};
 use amethyst::{

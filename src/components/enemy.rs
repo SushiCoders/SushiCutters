@@ -40,7 +40,7 @@ pub fn initialize_enemies(world: &mut World) {
     let mut rng = rand::thread_rng();
     let enemy_count = Uniform::new(1, 20);
     let direction = Uniform::new(-1, 1);
-    let velocity = Uniform::new(0.0, 50.0);
+    let velocity = Uniform::new(f32::EPSILON, 50.0);
     let enemy_x = Uniform::new(HITCIRCLE_RADIUS, ARENA_WIDTH - HITCIRCLE_RADIUS);
     let enemy_y = Uniform::new(HITCIRCLE_RADIUS, ARENA_HEIGHT - HITCIRCLE_RADIUS);
     for _ in 1..=enemy_count.sample(&mut rng) {
