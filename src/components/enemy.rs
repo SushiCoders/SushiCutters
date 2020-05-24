@@ -28,7 +28,7 @@ pub fn spawn_enemy(world: &mut World, enemy_x: f32, enemy_y: f32, x_vel: f32, y_
         })
         .with(Enemy)
         .with(Velocity {
-            velocity: Vector3::new(x_vel, y_vel, 0.0),
+            value: Vector3::new(x_vel, y_vel, 0.0),
         })
         .with(Health { amount: 10.0 })
         .with(t)

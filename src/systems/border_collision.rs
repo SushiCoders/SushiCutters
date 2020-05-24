@@ -28,16 +28,16 @@ impl<'s> System<'s> for BorderSystem {
             let enemy_x = translation.x;
             let enemy_y = translation.y;
 
-            let (x, y) = (velocity.velocity.x, velocity.velocity.y);
+            let (x, y) = (velocity.value.x, velocity.value.y);
             if (y.is_sign_negative() && enemy_y <= collider.radius)
                 || (y.is_sign_positive() && enemy_y >= ARENA_HEIGHT - collider.radius)
             {
-                velocity.velocity.y = -y;
+                velocity.value.y = -y;
             }
             if (x.is_sign_negative() && enemy_x <= collider.radius)
                 || (x.is_sign_positive() && enemy_x >= ARENA_WIDTH - collider.radius)
             {
-                velocity.velocity.x = -x;
+                velocity.value.x = -x;
             }
         }
     }

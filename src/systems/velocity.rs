@@ -17,7 +17,7 @@ impl<'s> System<'s> for VelocitySystem {
 
     fn run(&mut self, (velocities, mut locals, time): Self::SystemData) {
         for (velocity, local) in (&velocities, &mut locals).join() {
-            local.prepend_translation(velocity.velocity * time.delta_seconds());
+            local.prepend_translation(velocity.value * time.delta_seconds());
         }
     }
 }
