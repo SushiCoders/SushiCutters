@@ -2,7 +2,7 @@
 ///! There is a bit of code that was taken from the pong example which will be phased out in time
 use amethyst::{core::transform::Transform, ecs::prelude::*, prelude::*, renderer::Camera};
 extern crate rand;
-use crate::components::{initialize_player, initialize_enemies, CircleCollider, Health};
+use crate::components::{initialize_enemies, initialize_player, CircleCollider, Health};
 
 // Maybe make these into a resouce?
 pub const ARENA_HEIGHT: f32 = 100.0;

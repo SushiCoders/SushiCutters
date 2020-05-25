@@ -79,10 +79,8 @@ impl<'s> System<'s> for PlayerControlSystem {
                 if attack && player.next_attack <= time.absolute_time_seconds() {
                     player.next_attack = time.absolute_time_seconds() + TIME_TO_ATTACK;
 
-                    let attack_location = Vector3::from([0.0, ATTACK_BOX_SIZE[1] + 0.1, 0.0]);
-
-                    let mut transform = Transform::default();
-                    transform.set_translation(attack_location);
+                    let transform =
+                        Transform::from(Vector3::from([0.0, ATTACK_BOX_SIZE[1] + 0.1, 0.0]));
 
                     let collider = BoxCollider {
                         width: ATTACK_BOX_SIZE[0],

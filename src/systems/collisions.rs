@@ -4,20 +4,25 @@ use amethyst::{
     ecs::prelude::{Entities, Entity, Join, ReadStorage, System, WriteStorage},
 };
 
-use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions};
+use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions, Player};
 use crate::util::transform::global_translation;
 pub struct CollisionsSystem;
 
 impl<'s> System<'s> for CollisionsSystem {
+    #[allow(clippy::type_complexity)]
     type SystemData = (
         Entities<'s>,
         ReadStorage<'s, BoxCollider>,
         ReadStorage<'s, CircleCollider>,
+        WriteStorage<'s, Player>,
         ReadStorage<'s, Transform>,
         WriteStorage<'s, Collisions>,
     );
 
-    fn run(&mut self, (entities, boxes, circles, transforms, mut collisions): Self::SystemData) {
+    fn run(
+        &mut self,
+        (entities, boxes, circles, players, transforms, mut collisions): Self::SystemData,
+    ) {
         // Clear all collisions from the previous frame
         collisions.clear();
 
@@ -56,6 +61,25 @@ impl<'s> System<'s> for CollisionsSystem {
                     add_collision(&mut collisions, box_entity, circle_entity);
                 }
             }
+            for (player_entity, _player, player_circle, player_transform) in
+                (&entities, &players, &circles, &transforms).join()
+            {
+                if player_transform != circle_transform {
+                    let player_translation = global_translation(player_transform);
+                    let player_x = player_translation.x;
+                    let player_y = player_translation.y;
+                    let player_radius = player_circle.radius;
+                    if in_circle(
+                        (player_x, player_y),
+                        player_radius,
+                        (circle_x, circle_y),
+                        circle.radius,
+                    ) {
+                        add_collision(&mut collisions, circle_entity, player_entity);
+                        add_collision(&mut collisions, player_entity, circle_entity);
+                    }
+                }
+            }
         }
     }
 }
@@ -64,6 +88,10 @@ impl<'s> System<'s> for CollisionsSystem {
 // right and larger or equal than the bottom left.
 fn point_in_rect(x: f32, y: f32, left: f32, bottom: f32, right: f32, top: f32) -> bool {
     x >= left && x <= right && y >= bottom && y <= top
+}
+
+fn in_circle(p1: (f32, f32), r1: f32, p2: (f32, f32), r2: f32) -> bool {
+    (r1 + r2).powi(2) > ((p2.0 - p1.0).powi(2) + (p2.1 - p1.1).powi(2))
 }
 
 /// Add a collision from one entity to another
