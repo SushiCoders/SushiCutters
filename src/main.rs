@@ -1,6 +1,14 @@
 #![deny(clippy::all)]
-
+#![deny(clippy::all)]
+#![warn(clippy::cargo, clippy::pedantic, clippy::nursery, unsafe_code)]
+// Amethyst prefers `Default::default()`
+#![allow(clippy::default_trait_access)]
+// Amethyst's fauly
+#![allow(clippy::multiple_crate_versions)]
+// Will possibly change module structure/naming later
+#![allow(clippy::module_name_repetitions)]
 use amethyst::audio::AudioBundle;
+use amethyst::input::InputBundle;
 use amethyst::ui::{RenderUi, UiBundle};
 use amethyst::{
     core::transform::TransformBundle,
@@ -31,7 +39,6 @@ fn main() -> amethyst::Result<()> {
     let display_config_path = config_dir.join("display.ron");
     let bindings_path = config_dir.join("bindings.ron");
 
-    use amethyst::input::InputBundle;
     let input_bundle =
         InputBundle::<InputBindingTypes>::new().with_bindings_from_file(bindings_path)?;
 

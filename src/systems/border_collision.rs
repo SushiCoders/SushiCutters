@@ -24,7 +24,7 @@ impl<'s> System<'s> for BorderSystem {
         for (_, velocity, collider, transform) in
             (&enemies, &mut velocities, &colliders, &transforms).join()
         {
-            let translation = global_translation(&transform);
+            let translation = global_translation(transform);
             let enemy_x = translation.x;
             let enemy_y = translation.y;
 

@@ -1,14 +1,24 @@
 [package]
 name = "sushi_cutters"
 version = "0.1.0"
-authors = []
+authors = ["Eamon Caton <cargo@etcaton.dev>", "Masa Maeda"]
 edition = "2018"
 license = "Apache-2.0"
+description = "A 2D game written using the Amethyst engine"
+repository = "ssh://git@github.com/SushiCoders/SushiCutters"
+readme = "README.md"
+keywords = ["sushicutters", "game"]
+categories = ["games"]
 
 [dependencies]
 amethyst = "0.15.0"
 serde = { version = "1.0.110", features = ["derive"] }
 rand = "0.7.3"
+
+[dev-dependencies.cargo-husky]
+version = "1"
+default-features = false
+features = ["precommit-hook", "run-cargo-clippy", "run-cargo-fmt", "run-cargo-test"]
 
 [features]
 default = ["vulkan"]

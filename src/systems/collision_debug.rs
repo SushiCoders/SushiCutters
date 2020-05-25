@@ -89,7 +89,8 @@ impl<'s> System<'s> for CollisionDebugSystem {
         for (box_collider, transform, collision) in (&boxes, &transforms, collisions.maybe()).join()
         {
             let translation = global_translation(transform);
-            let half_box = Vector3::new(box_collider.width / 2f32, box_collider.height / 2f32, 0.0);
+            let half_box =
+                Vector3::new(box_collider.width / 2_f32, box_collider.height / 2_f32, 0.0);
 
             let box_start = Point3::from(translation - half_box);
             let box_end = Point3::from(translation + half_box);

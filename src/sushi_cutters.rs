@@ -1,20 +1,19 @@
-///! Core SushiCutters module
+///! Core `SushiCutters` module
 ///! There is a bit of code that was taken from the pong example which will be phased out in time
 use amethyst::{core::transform::Transform, ecs::prelude::*, prelude::*, renderer::Camera};
 extern crate rand;
-use crate::components::{initialize_player, initialize_enemies, CircleCollider, Health};
+use crate::components::{initialize_enemies, initialize_player, CircleCollider, Health};
 
 // Maybe make these into a resouce?
 pub const ARENA_HEIGHT: f32 = 100.0;
 pub const ARENA_WIDTH: f32 = 100.0;
 
+const CIRCLE_SIZE: f32 = 4.0_f32;
 /// TEMP: Colliders should always have a purpose/other components
 /// Hardcoded for testing purposes
 pub fn initialise_raw_colliders(world: &mut World) {
     let mut left_transform = Transform::default();
     let mut right_transform = Transform::default();
-
-    const CIRCLE_SIZE: f32 = 4.0f32;
 
     let y = ARENA_HEIGHT / 2.0;
     left_transform.set_translation_xyz(CIRCLE_SIZE, y, 0.0);
