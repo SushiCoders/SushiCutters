@@ -33,7 +33,7 @@ impl<'s> System<'s> for CollisionsSystem {
             // Bounce at the paddles.
             for (box_entity, box_col, box_transform) in (&entities, &boxes, &transforms).join() {
                 let translation = global_translation(box_transform);
-                let half_box = Vector3::new(box_col.width / 2f32, box_col.height / 2f32, 0.0);
+                let half_box = Vector3::new(box_col.width / 2_f32, box_col.height / 2_f32, 0.0);
                 let top_left = translation - half_box;
                 let box_x = top_left.x;
                 let box_y = top_left.y;
@@ -75,19 +75,16 @@ fn add_collision<'s>(
     target: Entity,
 ) {
     let component = collisions.get_mut(target);
-    match component {
-        Some(c) => {
-            c.entries.push(CollisionData { entity: source });
-        }
-        None => {
-            collisions
-                .insert(
-                    target,
-                    Collisions {
-                        entries: vec![CollisionData { entity: source }],
-                    },
-                )
-                .unwrap();
-        }
+    if let Some(c) = component {
+        c.entries.push(CollisionData { entity: source });
+    } else {
+        collisions
+            .insert(
+                target,
+                Collisions {
+                    entries: vec![CollisionData { entity: source }],
+                },
+            )
+            .unwrap();
     }
 }

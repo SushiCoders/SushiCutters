@@ -1,7 +1,10 @@
 use amethyst::core::Time;
 use amethyst::ecs::prelude::*;
 
-use crate::components::{markers::*, Collisions};
+use crate::components::{
+    markers::{KillAfterCollision, KillAfterTime},
+    Collisions,
+};
 
 pub struct KillAfterSystem;
 
@@ -16,16 +19,16 @@ impl<'s> System<'s> for KillAfterSystem {
         Read<'s, Time>,
     );
 
-    fn run(&mut self, (entities, kac, kat, collisions, time): Self::SystemData) {
+    fn run(&mut self, (entities, ka_col, ka_time, collisions, time): Self::SystemData) {
         // Kill all entites that have been collided with and have
         // the kill after collision marker
-        for (entity, _, _) in (&entities, &kac, &collisions).join() {
+        for (entity, _, _) in (&entities, &ka_col, &collisions).join() {
             // Should Handle unwrap some day
             entities.delete(entity).unwrap();
         }
 
         // Kill all entities that have lived their lifetime
-        for (entity, timing) in (&entities, &kat).join() {
+        for (entity, timing) in (&entities, &ka_time).join() {
             if timing.time <= time.absolute_time_seconds() {
                 entities.delete(entity).unwrap();
             }
