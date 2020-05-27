@@ -1,9 +1,8 @@
 #![deny(clippy::all)]
-#![deny(clippy::all)]
-#![warn(clippy::cargo, clippy::pedantic, clippy::nursery, unsafe_code)]
+#![warn(clippy::pedantic, clippy::nursery, unsafe_code)]
 // Amethyst prefers `Default::default()`
 #![allow(clippy::default_trait_access)]
-// Amethyst's fauly
+// Amethyst's fault
 #![allow(clippy::multiple_crate_versions)]
 // Will possibly change module structure/naming later
 #![allow(clippy::module_name_repetitions)]
