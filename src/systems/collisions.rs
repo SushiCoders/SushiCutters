@@ -4,20 +4,26 @@ use amethyst::{
     ecs::prelude::{Entities, Entity, Join, ReadStorage, System, WriteStorage},
 };
 
-use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions};
+use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions, Player};
 use crate::util::transform::global_translation;
+
 pub struct CollisionsSystem;
 
 impl<'s> System<'s> for CollisionsSystem {
+    #[allow(clippy::type_complexity)]
     type SystemData = (
         Entities<'s>,
         ReadStorage<'s, BoxCollider>,
         ReadStorage<'s, CircleCollider>,
+        WriteStorage<'s, Player>,
         ReadStorage<'s, Transform>,
         WriteStorage<'s, Collisions>,
     );
 
-    fn run(&mut self, (entities, boxes, circles, transforms, mut collisions): Self::SystemData) {
+    fn run(
+        &mut self,
+        (entities, boxes, circles, players, transforms, mut collisions): Self::SystemData,
+    ) {
         // Clear all collisions from the previous frame
         collisions.clear();
 
@@ -56,6 +62,23 @@ impl<'s> System<'s> for CollisionsSystem {
                     add_collision(&mut collisions, box_entity, circle_entity);
                 }
             }
+            for (player_entity, _player, player_circle, player_transform) in
+                (&entities, &players, &circles, &transforms).join()
+            {
+                if player_transform != circle_transform {
+                    let player_translation = global_translation(player_transform);
+                    let player_radius = player_circle.radius;
+                    if in_circle(
+                        player_radius,
+                        &player_translation,
+                        circle.radius,
+                        &translation,
+                    ) {
+                        add_collision(&mut collisions, circle_entity, player_entity);
+                        add_collision(&mut collisions, player_entity, circle_entity);
+                    }
+                }
+            }
         }
     }
 }
@@ -66,14 +89,20 @@ fn point_in_rect(x: f32, y: f32, left: f32, bottom: f32, right: f32, top: f32) -
     x >= left && x <= right && y >= bottom && y <= top
 }
 
+fn in_circle(
+    player_radius: f32,
+    player_translation: &Vector3<f32>,
+    circle_radius: f32,
+    circle_translation: &Vector3<f32>,
+) -> bool {
+    (player_radius + circle_radius).powi(2)
+        >= (player_translation - circle_translation).norm_squared()
+}
+
 /// Add a collision from one entity to another
 ///
 /// If there is no collision component then add one with the collision
-fn add_collision<'s>(
-    collisions: &mut WriteStorage<'s, Collisions>,
-    source: Entity,
-    target: Entity,
-) {
+fn add_collision(collisions: &mut WriteStorage<Collisions>, source: Entity, target: Entity) {
     let component = collisions.get_mut(target);
     if let Some(c) = component {
         c.entries.push(CollisionData { entity: source });
