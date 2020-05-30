@@ -1,6 +1,13 @@
 ///! Core `SushiCutters` module
 ///! There is a bit of code that was taken from the pong example which will be phased out in time
-use amethyst::{core::transform::Transform, ecs::prelude::*, prelude::*, renderer::Camera};
+use amethyst::{
+    assets::Loader,
+    core::transform::Transform,
+    ecs::prelude::*,
+    prelude::*,
+    renderer::Camera,
+    ui::{Anchor, TtfFormat, UiText, UiTransform},
+};
 extern crate rand;
 use crate::components::{initialize_enemies, initialize_player, CircleCollider, Health};
 
@@ -65,5 +72,47 @@ impl SimpleState for SushiCutters {
             initialise_raw_colliders(world);
         }
         initialize_player(world);
+        initialize_score(world);
     }
+}
+
+#[derive(Default)]
+pub struct Score {
+    pub player_score: i32,
+}
+
+pub struct ScoreText {
+    pub player_score_entity: Entity,
+}
+
+fn initialize_score(world: &mut World) {
+    let font = world.read_resource::<Loader>().load(
+        "../assets/Fira/ttf/FiraSans-Regular.ttf",
+        TtfFormat,
+        (),
+        &world.read_resource(),
+    );
+    let score_transform = UiTransform::new(
+        "Score".to_string(),
+        Anchor::TopMiddle,
+        Anchor::TopMiddle,
+        50_f32,
+        -50_f32,
+        1_f32,
+        200_f32,
+        50_f32,
+    );
+    let player_score_entity = world
+        .create_entity()
+        .with(score_transform)
+        .with(UiText::new(
+            font,
+            "Score: 0".to_string(),
+            [1_f32; 4],
+            50_f32,
+        ))
+        .build();
+    world.insert(ScoreText {
+        player_score_entity,
+    })
 }

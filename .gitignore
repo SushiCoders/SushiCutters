@@ -163,3 +163,6 @@ $RECYCLE.BIN/
 ## Custom
 # direnv
 .envrc
+
+# Code workspace
+*.code-workspace

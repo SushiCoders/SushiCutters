@@ -1,0 +1,3 @@
+[submodule "assets/Fira"]
+	path = assets/Fira
+	url = https://github.com/mozilla/Fira.git
