@@ -22,11 +22,13 @@ use amethyst::{
 
 mod components;
 mod input;
+mod scenes;
 mod sushi_cutters;
 mod systems;
 mod util;
+
 use crate::input::bindings::InputBindingTypes;
-use crate::sushi_cutters::SushiCutters;
+use crate::sushi_cutters::SceneSelect;
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
@@ -88,7 +90,7 @@ fn main() -> amethyst::Result<()> {
             &["collisions_system", "input_system"],
         );
 
-    let mut game = Application::new(assets_dir, SushiCutters::default(), game_data)?;
+    let mut game = Application::new(assets_dir, SceneSelect::default(), game_data)?;
     game.run();
 
     Ok(())
