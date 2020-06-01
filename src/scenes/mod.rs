@@ -4,28 +4,32 @@ use amethyst::{core::transform::Transform, ecs::prelude::*};
 use crate::components::enemy;
 use crate::sushi_cutters::{ARENA_HEIGHT, ARENA_WIDTH};
 
-use std::collections::HashMap;
-
 pub type SceneInitializer = fn(&mut World);
-pub type Scenes = HashMap<String, SceneInitializer>;
+
+pub struct Scene {
+    pub name: String,
+    pub initializer: SceneInitializer,
+}
+
+pub type Scenes = Vec<Scene>;
 
 pub fn scenes() -> Scenes {
-    let mut map = HashMap::new();
+    let mut s = Vec::new();
 
     // Typecast is necesary because functions contain their name
     // as part of their function signature so the compiler gets
     // upset unless you cast the pointers
-    map.insert(
-        String::from("basic"),
-        initialise_raw_colliders as SceneInitializer,
-    );
+    s.push(Scene {
+        name: String::from("basic"),
+        initializer: initialise_raw_colliders as SceneInitializer,
+    });
 
-    map.insert(
-        String::from("enemies"),
-        initialize_enemies as SceneInitializer,
-    );
+    s.push(Scene {
+        name: String::from("enemies"),
+        initializer: initialize_enemies as SceneInitializer,
+    });
 
-    map
+    s
 }
 
 const CIRCLE_SIZE: f32 = 4.0_f32;

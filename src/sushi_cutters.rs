@@ -29,7 +29,6 @@ pub fn initialise_camera(world: &mut World) {
 #[derive(Default)]
 pub struct SceneSelect {
     scenes: Option<scenes::Scenes>,
-    keys: Option<Vec<String>>,
 }
 
 impl SimpleState for SceneSelect {
@@ -43,11 +42,9 @@ impl SimpleState for SceneSelect {
 
             // Store a copy of keys so that the order stays the same
             // when we need to use the keys later
-            let keys: Vec<String> = s.keys().cloned().collect();
-            for (index, key) in keys.iter().enumerate() {
-                println!("{}: {}", index, key);
+            for (index, scene) in s.iter().enumerate() {
+                println!("{}: {}", index, scene.name);
             }
-            self.keys = Some(keys);
         }
     }
 
@@ -57,13 +54,12 @@ impl SimpleState for SceneSelect {
         event: StateEvent,
     ) -> SimpleTrans {
         let s = self.scenes.as_ref().unwrap();
-        let keys = self.keys.as_ref().unwrap();
 
         if let StateEvent::Window(event) = &event {
             if is_key_down(event, VirtualKeyCode::Key0) {
                 // Copy the value out of the map so that we don't have
                 // to deal with references
-                let initializer = s.get(&keys[0]).copied();
+                let initializer = Some(s[0].initializer);
                 return SimpleTrans::Push(Box::new(SushiCutters { initializer }));
             }
         }
