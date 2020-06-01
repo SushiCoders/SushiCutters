@@ -1,8 +1,14 @@
 ///! Core `SushiCutters` module
 ///! There is a bit of code that was taken from the pong example which will be phased out in time
 extern crate rand;
-use crate::{components::initialize_player, scenes};
-use amethyst::{core::transform::Transform, ecs::prelude::*, prelude::*, renderer::Camera};
+use crate::{components::initialize_player, scenes, scenes::SceneInitializer};
+use amethyst::{
+    core::transform::Transform,
+    ecs::prelude::*,
+    input::{is_key_down, VirtualKeyCode},
+    prelude::*,
+    renderer::Camera,
+};
 
 // Maybe make these into a resouce?
 pub const ARENA_HEIGHT: f32 = 100.0;
@@ -21,26 +27,54 @@ pub fn initialise_camera(world: &mut World) {
 }
 
 #[derive(Default)]
-pub struct SceneSelect;
+pub struct SceneSelect {
+    scenes: Option<scenes::Scenes>,
+    keys: Option<Vec<String>>,
+}
 
 impl SimpleState for SceneSelect {
-    fn update(&mut self, _data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
-        // Typecast is necesary because functions contain their name
-        // as part of their function signature so the compiler gets
-        // upset unless you cast the pointers
-        let initializer = if cfg!(feature = "enemies") {
-            Some(scenes::initialize_enemies as fn(&mut World))
-        } else {
-            Some(scenes::initialise_raw_colliders as fn(&mut World))
-        };
+    fn on_start(&mut self, _data: StateData<'_, GameData<'_, '_>>) {
+        self.scenes = Some(scenes::scenes());
 
-        SimpleTrans::Push(Box::new(SushiCutters { initializer }))
+        println!("Please select a scene (screen must be in focus)");
+
+        if let Some(s) = self.scenes.as_ref() {
+            let s: &scenes::Scenes = s;
+
+            // Store a copy of keys so that the order stays the same
+            // when we need to use the keys later
+            let keys: Vec<String> = s.keys().cloned().collect();
+            for (index, key) in keys.iter().enumerate() {
+                println!("{}: {}", index, key);
+            }
+            self.keys = Some(keys);
+        }
+    }
+
+    fn handle_event(
+        &mut self,
+        _data: StateData<'_, GameData<'_, '_>>,
+        event: StateEvent,
+    ) -> SimpleTrans {
+        let s = self.scenes.as_ref().unwrap();
+        let keys = self.keys.as_ref().unwrap();
+
+        if let StateEvent::Window(event) = &event {
+            if is_key_down(event, VirtualKeyCode::Key0) {
+                // Copy the value out of the map so that we don't have
+                // to deal with references
+                let initializer = s.get(&keys[0]).copied();
+                return SimpleTrans::Push(Box::new(SushiCutters { initializer }));
+            }
+        }
+
+        SimpleTrans::None
     }
 }
 
 #[derive(Default)]
 pub struct SushiCutters {
-    initializer: Option<fn(&mut World)>,
+    initializer: Option<SceneInitializer>,
 }
 
 impl SimpleState for SushiCutters {
