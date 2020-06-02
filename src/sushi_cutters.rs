@@ -5,10 +5,11 @@ use crate::{components::initialize_player, scenes, scenes::SceneInitializer};
 use amethyst::{
     core::transform::Transform,
     ecs::prelude::*,
-    input::{is_key_down, VirtualKeyCode},
     prelude::*,
     renderer::Camera,
+    winit::{Event, WindowEvent},
 };
+use std::convert::TryInto;
 
 // Maybe make these into a resouce?
 pub const ARENA_HEIGHT: f32 = 100.0;
@@ -46,6 +47,8 @@ impl SimpleState for SceneSelect {
                 println!("{}: {}", index, scene.name);
             }
         }
+
+        // TODO: Generate UI
     }
 
     fn handle_event(
@@ -55,16 +58,29 @@ impl SimpleState for SceneSelect {
     ) -> SimpleTrans {
         let s = self.scenes.as_ref().unwrap();
 
+        // TODO: Use UI instead of a keyboard input
+        // Right now this is limited to only 10 scenes
         if let StateEvent::Window(event) = &event {
-            if is_key_down(event, VirtualKeyCode::Key0) {
-                // Copy the value out of the map so that we don't have
-                // to deal with references
-                let initializer = Some(s[0].initializer);
-                return SimpleTrans::Push(Box::new(SushiCutters { initializer }));
+            if let Event::WindowEvent { ref event, .. } = event {
+                if let WindowEvent::ReceivedCharacter(c) = event {
+                    if let Some(num) = c.to_digit(10) {
+                        let num: usize = num.try_into().unwrap();
+                        if num < s.len() {
+                            let initializer = Some(s[num].initializer);
+                            return SimpleTrans::Switch(Box::new(SushiCutters { initializer }));
+                        } else {
+                            println!("{} is out of bounds", num);
+                        }
+                    }
+                }
             }
         }
 
         SimpleTrans::None
+    }
+
+    fn on_stop(&mut self, _data: StateData<'_, GameData<'_, '_>>) {
+        // TODO: Clean up UI
     }
 }
 
