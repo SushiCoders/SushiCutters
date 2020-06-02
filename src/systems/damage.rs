@@ -1,10 +1,14 @@
-#![allow(clippy::cast_possible_truncation)] // Truncation is fine for score text
+#![allow(clippy::cast_possible_truncation)]
+
+// Truncation is fine for score text
 use amethyst::{ecs::prelude::*, ui::UiText};
 
+use crate::components::Player;
 use crate::{
     components::{Collisions, Damage, Health},
     sushi_cutters::{Score, ScoreText},
 };
+
 pub struct DamageSystem;
 
 impl<'s> System<'s> for DamageSystem {
@@ -14,6 +18,7 @@ impl<'s> System<'s> for DamageSystem {
         ReadStorage<'s, Collisions>,
         ReadStorage<'s, Damage>,
         WriteStorage<'s, Health>,
+        ReadStorage<'s, Player>,
         WriteStorage<'s, UiText>,
         Write<'s, Score>,
         ReadExpect<'s, ScoreText>,
@@ -26,13 +31,15 @@ impl<'s> System<'s> for DamageSystem {
     /// Of damage
     fn run(
         &mut self,
-        (entities, collisions, damages, mut healths, mut ui_text, mut scores, score_text): Self::SystemData,
+        (entities, collisions, damages, mut healths, players, mut ui_text, mut scores, score_text): Self::SystemData,
     ) {
         for (collision_entries, damage) in (&collisions, &damages).join() {
             for collision in &collision_entries.entries {
                 // If the collidee has a health component reduce it by damage units
                 if let Some(health) = healths.get_mut(collision.entity) {
-                    scores.player_score += damage.amount as i32;
+                    if !players.contains(collision.entity) {
+                        scores.player_score += damage.amount as i32;
+                    }
                     health.amount -= damage.amount;
                     println!(
                         "{:?} took {} damage ({} health left)",
@@ -40,7 +47,9 @@ impl<'s> System<'s> for DamageSystem {
                     );
                     // If the health of the target is less than 0 then delet this
                     if health.amount <= 0.0 {
-                        scores.player_score += 10;
+                        if !players.contains(collision.entity) {
+                            scores.player_score += 10;
+                        }
                         println!("{:?} kicked the bucket", collision.entity);
                         entities
                             .delete(collision.entity)
