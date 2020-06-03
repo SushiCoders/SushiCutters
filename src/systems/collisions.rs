@@ -1,10 +1,13 @@
 //! Stolen almost in it's entirety from pong
 use amethyst::{
     core::{math::Vector3, Transform},
-    ecs::prelude::{Entities, Entity, Join, ReadStorage, System, WriteStorage},
+    ecs::{
+        hibitset::BitSet,
+        prelude::{Entities, Entity, Join, ReadStorage, System, WriteStorage},
+    },
 };
 
-use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions, Player};
+use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions};
 use crate::util::transform::global_translation;
 
 pub struct CollisionsSystem;
@@ -15,23 +18,25 @@ impl<'s> System<'s> for CollisionsSystem {
         Entities<'s>,
         ReadStorage<'s, BoxCollider>,
         ReadStorage<'s, CircleCollider>,
-        WriteStorage<'s, Player>,
         ReadStorage<'s, Transform>,
         WriteStorage<'s, Collisions>,
     );
 
-    fn run(
-        &mut self,
-        (entities, boxes, circles, players, transforms, mut collisions): Self::SystemData,
-    ) {
+    fn run(&mut self, (entities, boxes, circles, transforms, mut collisions): Self::SystemData) {
         // Clear all collisions from the previous frame
         collisions.clear();
+
+        // Create a new bitset to prevent rechecking an entity that was already checked
+        let mut checked = BitSet::new();
 
         // Check whether a ball collided, and bounce off accordingly.
         //
         // We also check for the velocity of the ball every time, to prevent multiple collisions
         // from occurring.
         for (circle_entity, circle, circle_transform) in (&entities, &circles, &transforms).join() {
+            // Add the current entity to the checked set
+            checked.add(circle_entity.id());
+
             let translation = global_translation(circle_transform);
             let circle_x = translation.x;
             let circle_y = translation.y;
@@ -62,20 +67,25 @@ impl<'s> System<'s> for CollisionsSystem {
                     add_collision(&mut collisions, box_entity, circle_entity);
                 }
             }
-            for (player_entity, _player, player_circle, player_transform) in
-                (&entities, &players, &circles, &transforms).join()
+
+            // Use a join exclude to exclude all other circles we have
+            // already seen
+            // Tested and verified to prevent double collisions
+            // Also massively reduces computation time
+            for (other_entity, other_circle, other_transform, _) in
+                (&entities, &circles, &transforms, !&checked).join()
             {
-                if player_transform != circle_transform {
-                    let player_translation = global_translation(player_transform);
-                    let player_radius = player_circle.radius;
+                if other_transform != circle_transform {
+                    let other_translation = global_translation(other_transform);
+                    let other_radius = other_circle.radius;
                     if in_circle(
-                        player_radius,
-                        &player_translation,
+                        other_radius,
+                        &other_translation,
                         circle.radius,
                         &translation,
                     ) {
-                        add_collision(&mut collisions, circle_entity, player_entity);
-                        add_collision(&mut collisions, player_entity, circle_entity);
+                        add_collision(&mut collisions, circle_entity, other_entity);
+                        add_collision(&mut collisions, other_entity, circle_entity);
                     }
                 }
             }
