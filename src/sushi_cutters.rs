@@ -9,7 +9,6 @@ use amethyst::{
     renderer::Camera,
     winit::{Event, WindowEvent},
 };
-use std::convert::TryInto;
 
 // Maybe make these into a resouce?
 pub const ARENA_HEIGHT: f32 = 100.0;
@@ -28,27 +27,21 @@ pub fn initialise_camera(world: &mut World) {
 }
 
 #[derive(Default)]
-pub struct SceneSelect {
-    scenes: Option<scenes::Scenes>,
-}
+pub struct SceneSelect;
 
 impl SimpleState for SceneSelect {
     fn on_start(&mut self, _data: StateData<'_, GameData<'_, '_>>) {
-        self.scenes = Some(scenes::scenes());
-
         println!("Please select a scene (screen must be in focus)");
 
-        if let Some(s) = self.scenes.as_ref() {
-            let s: &scenes::Scenes = s;
-
-            // Store a copy of keys so that the order stays the same
-            // when we need to use the keys later
-            for (index, scene) in s.iter().enumerate() {
-                println!("{}: {}", index, scene.name);
-            }
+        for (index, scene) in scenes::SCENES.iter().enumerate() {
+            println!("{}: {}", index, scene.name);
         }
 
         // TODO: Generate UI
+    }
+
+    fn on_stop(&mut self, _data: StateData<'_, GameData<'_, '_>>) {
+        // TODO: Clean up UI
     }
 
     fn handle_event(
@@ -56,7 +49,7 @@ impl SimpleState for SceneSelect {
         _data: StateData<'_, GameData<'_, '_>>,
         event: StateEvent,
     ) -> SimpleTrans {
-        let s = self.scenes.as_ref().unwrap();
+        let s = scenes::SCENES;
 
         // TODO: Use UI instead of a keyboard input
         // Right now this is limited to only 10 scenes
@@ -64,7 +57,7 @@ impl SimpleState for SceneSelect {
             if let Event::WindowEvent { ref event, .. } = event {
                 if let WindowEvent::ReceivedCharacter(c) = event {
                     if let Some(num) = c.to_digit(10) {
-                        let num: usize = num.try_into().unwrap();
+                        let num: usize = num as usize;
                         if num < s.len() {
                             let initializer = Some(s[num].initializer);
                             return SimpleTrans::Switch(Box::new(SushiCutters { initializer }));
@@ -77,10 +70,6 @@ impl SimpleState for SceneSelect {
         }
 
         SimpleTrans::None
-    }
-
-    fn on_stop(&mut self, _data: StateData<'_, GameData<'_, '_>>) {
-        // TODO: Clean up UI
     }
 }
 

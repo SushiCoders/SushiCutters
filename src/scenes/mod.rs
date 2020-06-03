@@ -1,5 +1,8 @@
 use crate::components::{CircleCollider, Health};
-use amethyst::{core::transform::Transform, ecs::prelude::*};
+use amethyst::{
+    core::{math::Vector3, transform::Transform},
+    ecs::prelude::*,
+};
 
 use crate::components::enemy;
 use crate::sushi_cutters::{ARENA_HEIGHT, ARENA_WIDTH};
@@ -7,58 +10,47 @@ use crate::sushi_cutters::{ARENA_HEIGHT, ARENA_WIDTH};
 pub type SceneInitializer = fn(&mut World);
 
 pub struct Scene {
-    pub name: String,
+    pub name: &'static str,
     pub initializer: SceneInitializer,
 }
 
-pub type Scenes = Vec<Scene>;
-
-pub fn scenes() -> Scenes {
-    let mut s = Vec::new();
-
-    // Typecast is necesary because functions contain their name
-    // as part of their function signature so the compiler gets
-    // upset unless you cast the pointers
-    s.push(Scene {
-        name: String::from("basic"),
+pub const SCENES: [Scene; 2] = [
+    Scene {
+        name: "basic",
         initializer: initialise_raw_colliders as SceneInitializer,
-    });
-
-    s.push(Scene {
-        name: String::from("enemies"),
+    },
+    Scene {
+        name: "enemies",
         initializer: initialize_enemies as SceneInitializer,
-    });
+    },
+];
 
-    s
+fn create_test_colliders(world: &mut World, transforms: Vec<Transform>) {
+    let health = Health { amount: 10.0 };
+    let collider = CircleCollider {
+        radius: CIRCLE_SIZE,
+    };
+
+    for transform in transforms {
+        world
+            .create_entity()
+            .with(collider.clone())
+            .with(health.clone())
+            .with(transform)
+            .build();
+    }
 }
 
 const CIRCLE_SIZE: f32 = 4.0_f32;
 pub fn initialise_raw_colliders(world: &mut World) {
-    let mut left_transform = Transform::default();
-    let mut right_transform = Transform::default();
-
     let y = ARENA_HEIGHT / 2.0;
-    left_transform.set_translation_xyz(CIRCLE_SIZE, y, 0.0);
-    right_transform.set_translation_xyz(ARENA_WIDTH - CIRCLE_SIZE, y, 0.0);
 
-    let health = Health { amount: 10.0 };
-    world
-        .create_entity()
-        .with(CircleCollider {
-            radius: CIRCLE_SIZE,
-        })
-        .with(health.clone())
-        .with(right_transform)
-        .build();
+    let transforms = vec![
+        Transform::from(Vector3::from([CIRCLE_SIZE, y, 0.0])),
+        Transform::from(Vector3::from([ARENA_WIDTH - CIRCLE_SIZE, y, 0.0])),
+    ];
 
-    world
-        .create_entity()
-        .with(CircleCollider {
-            radius: CIRCLE_SIZE,
-        })
-        .with(health)
-        .with(left_transform)
-        .build();
+    create_test_colliders(world, transforms);
 }
 
 pub fn initialize_enemies(world: &mut World) {

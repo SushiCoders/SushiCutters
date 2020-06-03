@@ -1,5 +1,6 @@
 use amethyst::ecs::prelude::{Component, DenseVecStorage, Entity};
 
+#[derive(Clone)]
 pub struct CircleCollider {
     pub radius: f32,
 }
@@ -8,6 +9,7 @@ impl Component for CircleCollider {
     type Storage = DenseVecStorage<Self>;
 }
 
+#[derive(Clone)]
 pub struct BoxCollider {
     pub width: f32,
     pub height: f32,
