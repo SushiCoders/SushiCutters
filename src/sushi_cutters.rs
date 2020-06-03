@@ -82,7 +82,7 @@ impl SimpleState for SushiCutters {
 
 fn initialize_score(world: &mut World) {
     let font = world.read_resource::<Loader>().load(
-        "Fira/FiraSans-Regular.ttf",
+        "fonts/FiraSans-Regular.ttf",
         TtfFormat,
         (),
         &world.read_resource(),
