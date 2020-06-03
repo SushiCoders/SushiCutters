@@ -12,9 +12,9 @@ use amethyst::{
 extern crate rand;
 
 use crate::components::{initialize_enemies, initialize_player, CircleCollider, Health};
-use crate::systems::score_ui::ScoreText;
+use crate::systems::score::ScoreText;
 
-// Maybe make these into a resouce?
+// Maybe make these into a resource?
 pub const ARENA_HEIGHT: f32 = 100.0;
 pub const ARENA_WIDTH: f32 = 100.0;
 

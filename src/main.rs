@@ -79,11 +79,7 @@ fn main() -> amethyst::Result<()> {
             "kill_after_system",
             &["collisions_system"],
         )
-        .with(
-            systems::ScoreUISystem,
-            "score_system",
-            &["collisions_system"],
-        )
+        .with(systems::ScoreSystem, "score_system", &["collisions_system"])
         .with(
             systems::DamageSystem,
             "damage_system",
