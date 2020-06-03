@@ -5,6 +5,7 @@ use crate::components::{Collisions, Damage, Health};
 pub struct DamageSystem;
 
 impl<'s> System<'s> for DamageSystem {
+    #[allow(clippy::type_complexity)]
     type SystemData = (
         Entities<'s>,
         ReadStorage<'s, Collisions>,
