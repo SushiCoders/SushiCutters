@@ -8,14 +8,18 @@ use amethyst::{
     renderer::Camera,
     ui::{Anchor, TtfFormat, UiText, UiTransform},
 };
+
 extern crate rand;
+
 use crate::components::{initialize_enemies, initialize_player, CircleCollider, Health};
+use crate::systems::score_ui::ScoreText;
 
 // Maybe make these into a resouce?
 pub const ARENA_HEIGHT: f32 = 100.0;
 pub const ARENA_WIDTH: f32 = 100.0;
 
 const CIRCLE_SIZE: f32 = 4.0_f32;
+
 /// TEMP: Colliders should always have a purpose/other components
 /// Hardcoded for testing purposes
 pub fn initialise_raw_colliders(world: &mut World) {
@@ -76,29 +80,20 @@ impl SimpleState for SushiCutters {
     }
 }
 
-#[derive(Default)]
-pub struct Score {
-    pub player_score: i32,
-}
-
-pub struct ScoreText {
-    pub player_score_entity: Entity,
-}
-
 fn initialize_score(world: &mut World) {
     let font = world.read_resource::<Loader>().load(
-        "../assets/Fira/ttf/FiraSans-Regular.ttf",
+        "Fira/FiraSans-Regular.ttf",
         TtfFormat,
         (),
         &world.read_resource(),
     );
     let score_transform = UiTransform::new(
-        "Score".to_string(),
+        "score".to_string(),
         Anchor::TopMiddle,
         Anchor::TopMiddle,
-        50_f32,
-        -50_f32,
-        1_f32,
+        0_f32,
+        0_f32,
+        0_f32,
         200_f32,
         50_f32,
     );
@@ -107,7 +102,7 @@ fn initialize_score(world: &mut World) {
         .with(score_transform)
         .with(UiText::new(
             font,
-            "Score: 0".to_string(),
+            ScoreText::format_from_str(0),
             [1_f32; 4],
             50_f32,
         ))

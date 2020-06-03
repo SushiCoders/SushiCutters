@@ -4,7 +4,7 @@ use amethyst::{
     ecs::prelude::{Entities, Entity, Join, ReadStorage, System, WriteStorage},
 };
 
-use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions, Player};
+use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions};
 use crate::util::transform::global_translation;
 
 pub struct CollisionsSystem;
@@ -15,15 +15,11 @@ impl<'s> System<'s> for CollisionsSystem {
         Entities<'s>,
         ReadStorage<'s, BoxCollider>,
         ReadStorage<'s, CircleCollider>,
-        WriteStorage<'s, Player>,
         ReadStorage<'s, Transform>,
         WriteStorage<'s, Collisions>,
     );
 
-    fn run(
-        &mut self,
-        (entities, boxes, circles, players, transforms, mut collisions): Self::SystemData,
-    ) {
+    fn run(&mut self, (entities, boxes, circles, transforms, mut collisions): Self::SystemData) {
         // Clear all collisions from the previous frame
         collisions.clear();
 
@@ -62,8 +58,8 @@ impl<'s> System<'s> for CollisionsSystem {
                     add_collision(&mut collisions, box_entity, circle_entity);
                 }
             }
-            for (player_entity, _player, player_circle, player_transform) in
-                (&entities, &players, &circles, &transforms).join()
+            for (player_entity, player_circle, player_transform) in
+                (&entities, &circles, &transforms).join()
             {
                 if player_transform != circle_transform {
                     let player_translation = global_translation(player_transform);
