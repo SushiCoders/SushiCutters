@@ -102,7 +102,7 @@ fn initialize_score(world: &mut World) {
         .with(score_transform)
         .with(UiText::new(
             font,
-            ScoreText::format_from_str(0),
+            ScoreText::format_score(0),
             [1_f32; 4],
             50_f32,
         ))

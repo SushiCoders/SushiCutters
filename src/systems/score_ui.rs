@@ -17,7 +17,7 @@ pub struct ScoreText {
 }
 
 impl ScoreText {
-    pub fn format_from_str(score: u32) -> String {
+    pub fn format_score(score: u32) -> String {
         format!("Score: {}", score)
     }
 }
@@ -49,7 +49,7 @@ impl<'s> System<'s> for ScoreUISystem {
                             damage.amount as u32
                         };
                         if let Some(text) = ui_text.get_mut(score_text.player_score_entity) {
-                            text.text = ScoreText::format_from_str(scores.player_score);
+                            text.text = ScoreText::format_score(scores.player_score);
                         }
                     }
                 }
