@@ -9,48 +9,16 @@ use amethyst::{
     prelude::*,
     renderer::Camera,
     ui::{Anchor, TtfFormat, UiText, UiTransform},
+    winit::{Event, WindowEvent},
 };
 
 extern crate rand;
 
-use crate::components::{initialize_enemies, initialize_player, CircleCollider, Health};
 use crate::systems::score::ScoreText;
 
 // Maybe make these into a resource?
 pub const ARENA_HEIGHT: f32 = 100.0;
 pub const ARENA_WIDTH: f32 = 100.0;
-
-const CIRCLE_SIZE: f32 = 4.0_f32;
-
-/// TEMP: Colliders should always have a purpose/other components
-/// Hardcoded for testing purposes
-pub fn initialise_raw_colliders(world: &mut World) {
-    let mut left_transform = Transform::default();
-    let mut right_transform = Transform::default();
-
-    let y = ARENA_HEIGHT / 2.0;
-    left_transform.set_translation_xyz(CIRCLE_SIZE, y, 0.0);
-    right_transform.set_translation_xyz(ARENA_WIDTH - CIRCLE_SIZE, y, 0.0);
-
-    let health = Health { amount: 10.0 };
-    world
-        .create_entity()
-        .with(CircleCollider {
-            radius: CIRCLE_SIZE,
-        })
-        .with(health.clone())
-        .with(right_transform)
-        .build();
-
-    world
-        .create_entity()
-        .with(CircleCollider {
-            radius: CIRCLE_SIZE,
-        })
-        .with(health)
-        .with(left_transform)
-        .build();
-}
 
 pub fn initialise_camera(world: &mut World) {
     // Setup camera in a way that our screen covers whole arena and (0, 0) is in the bottom left.
@@ -68,7 +36,9 @@ pub fn initialise_camera(world: &mut World) {
 pub struct SceneSelect;
 
 impl SimpleState for SceneSelect {
-    fn on_start(&mut self, _data: StateData<'_, GameData<'_, '_>>) {
+    fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        initialize_score(data.world);
+
         println!("Please select a scene (screen must be in focus)");
 
         for (index, scene) in scenes::SCENES.iter().enumerate() {
@@ -127,7 +97,6 @@ impl SimpleState for SushiCutters {
         }
 
         initialize_player(world);
-        initialize_score(world);
     }
 }
 
