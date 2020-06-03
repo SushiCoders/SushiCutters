@@ -115,15 +115,11 @@ fn in_circle(
 fn add_collision(collisions: &mut WriteStorage<Collisions>, source: Entity, target: Entity) {
     let component = collisions.get_mut(target);
     if let Some(c) = component {
-        c.entries.push(CollisionData { entity: source });
+        c.insert(source, CollisionData);
     } else {
-        collisions
-            .insert(
-                target,
-                Collisions {
-                    entries: vec![CollisionData { entity: source }],
-                },
-            )
-            .unwrap();
+        let mut c = Collisions::default();
+        c.insert(source, CollisionData);
+
+        collisions.insert(target, c).unwrap();
     }
 }
