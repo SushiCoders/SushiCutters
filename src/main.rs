@@ -6,6 +6,7 @@
 #![allow(clippy::multiple_crate_versions)]
 // Will possibly change module structure/naming later
 #![allow(clippy::module_name_repetitions)]
+
 use amethyst::audio::AudioBundle;
 use amethyst::input::InputBundle;
 use amethyst::ui::{RenderUi, UiBundle};
@@ -79,6 +80,7 @@ fn main() -> amethyst::Result<()> {
             "kill_after_system",
             &["collisions_system"],
         )
+        .with(systems::ScoreSystem, "score_system", &["collisions_system"])
         .with(
             systems::DamageSystem,
             "damage_system",
