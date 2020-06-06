@@ -7,6 +7,7 @@ use amethyst::{
     },
     prelude::*,
 };
+use log::trace;
 
 pub const HITCIRCLE_RADIUS: f32 = 4.0;
 
@@ -17,7 +18,7 @@ impl Component for Enemy {
 }
 
 pub fn spawn_enemy(world: &mut World, enemy_x: f32, enemy_y: f32, x_vel: f32, y_vel: f32) {
-    println!("Spawning an enemy");
+    trace!("Spawning an enemy");
     let mut t = Transform::default();
     t.set_translation_xyz(enemy_x, enemy_y, 0.0);
     world

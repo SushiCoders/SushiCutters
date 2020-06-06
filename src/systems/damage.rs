@@ -1,4 +1,5 @@
 use amethyst::ecs::prelude::*;
+use log::debug;
 
 use crate::components::{Collisions, Damage, Health};
 
@@ -24,13 +25,13 @@ impl<'s> System<'s> for DamageSystem {
                 // If the collidee has a health component reduce it by damage units
                 if let Some(health) = healths.get_mut(collision.entity) {
                     health.amount -= damage.amount;
-                    println!(
+                    debug!(
                         "{:?} took {} damage ({} health left)",
                         collision.entity, damage.amount, health.amount
                     );
                     // If the health of the target is less than 0 then delet this
                     if health.amount <= 0.0 {
-                        println!("{:?} kicked the bucket", collision.entity);
+                        debug!("{:?} kicked the bucket", collision.entity);
                         entities
                             .delete(collision.entity)
                             .expect("Something wrong happened");
