@@ -34,9 +34,6 @@ impl<'s> System<'s> for CollisionsSystem {
         // We also check for the velocity of the ball every time, to prevent multiple collisions
         // from occurring.
         for (circle_entity, circle, circle_transform) in (&entities, &circles, &transforms).join() {
-            // Add the current entity to the checked set
-            checked.add(circle_entity.id());
-
             let translation = global_translation(circle_transform);
             let circle_x = translation.x;
             let circle_y = translation.y;
@@ -68,6 +65,11 @@ impl<'s> System<'s> for CollisionsSystem {
                 }
             }
 
+            // Add the current entity to the checked set
+            // Makes sure that the current element isn't looped through
+            // in any subsequent subloops
+            checked.add(circle_entity.id());
+
             // Use a join exclude to exclude all other circles we have
             // already seen
             // Tested and verified to prevent double collisions
@@ -75,18 +77,18 @@ impl<'s> System<'s> for CollisionsSystem {
             for (other_entity, other_circle, other_transform, _) in
                 (&entities, &circles, &transforms, !&checked).join()
             {
-                if other_transform != circle_transform {
-                    let other_translation = global_translation(other_transform);
-                    let other_radius = other_circle.radius;
-                    if in_circle(
-                        other_radius,
-                        &other_translation,
-                        circle.radius,
-                        &translation,
-                    ) {
-                        add_collision(&mut collisions, circle_entity, other_entity);
-                        add_collision(&mut collisions, other_entity, circle_entity);
-                    }
+                // You don't need to check equality the negative join guarentees
+                // the circle entity and other entity are different entities
+                let other_translation = global_translation(other_transform);
+                let other_radius = other_circle.radius;
+                if in_circle(
+                    other_radius,
+                    &other_translation,
+                    circle.radius,
+                    &translation,
+                ) {
+                    add_collision(&mut collisions, circle_entity, other_entity);
+                    add_collision(&mut collisions, other_entity, circle_entity);
                 }
             }
         }
