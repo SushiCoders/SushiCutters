@@ -14,9 +14,10 @@ categories = ["games"]
 amethyst = "0.15.0"
 serde = { version = "1.0.110", features = ["derive"] }
 rand = "0.7.3"
+log = "0.4.8"
 
 [dev-dependencies.cargo-husky]
-version = "1"
+version = "1.5.0"
 default-features = false
 features = ["precommit-hook", "run-cargo-clippy", "run-cargo-fmt", "run-cargo-test"]
 

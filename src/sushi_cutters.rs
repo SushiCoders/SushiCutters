@@ -1,7 +1,6 @@
 ///! Core `SushiCutters` module
 ///! There is a bit of code that was taken from the pong example which will be phased out in time
 use crate::{components::initialize_player, scenes, scenes::SceneInitializer};
-
 use amethyst::{
     assets::Loader,
     core::transform::Transform,
@@ -11,6 +10,7 @@ use amethyst::{
     ui::{Anchor, TtfFormat, UiText, UiTransform},
     winit::{Event, WindowEvent},
 };
+use log::{info, warn};
 
 extern crate rand;
 
@@ -39,10 +39,10 @@ impl SimpleState for SceneSelect {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         initialize_score(data.world);
 
-        println!("Please select a scene (screen must be in focus)");
+        info!("Please select a scene (screen must be in focus)");
 
         for (index, scene) in scenes::SCENES.iter().enumerate() {
-            println!("{}: {}", index, scene.name);
+            info!("{}: {}", index, scene.name);
         }
 
         // TODO: Generate UI
@@ -70,7 +70,7 @@ impl SimpleState for SceneSelect {
                             let initializer = Some(s[num].initializer);
                             return SimpleTrans::Switch(Box::new(SushiCutters { initializer }));
                         } else {
-                            println!("{} is out of bounds", num);
+                            warn!("{} is out of bounds", num);
                         }
                     }
                 }
