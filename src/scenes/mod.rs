@@ -17,7 +17,7 @@ pub struct Scene {
 pub const SCENES: [Scene; 2] = [
     Scene {
         name: "basic",
-        initializer: initialise_raw_colliders as SceneInitializer,
+        initializer: initialize_raw_colliders as SceneInitializer,
     },
     Scene {
         name: "enemies",
@@ -42,7 +42,7 @@ fn create_test_colliders(world: &mut World, transforms: Vec<Transform>) {
 }
 
 const CIRCLE_SIZE: f32 = 4.0_f32;
-pub fn initialise_raw_colliders(world: &mut World) {
+pub fn initialize_raw_colliders(world: &mut World) {
     let y = ARENA_HEIGHT / 2.0;
 
     let transforms = vec![

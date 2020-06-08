@@ -17,7 +17,7 @@ impl<'s> System<'s> for DamageSystem {
     /// Applies all damages from entities with damage to entities with health
     ///
     /// If an entities health reaches below zero then remove it from the game
-    /// This can resonably be split into two separate systems if there are other sources
+    /// This can reasonably be split into two separate systems if there are other sources
     /// Of damage
     fn run(&mut self, (entities, collisions, damages, mut healths): Self::SystemData) {
         // For each collider with a damage
