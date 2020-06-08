@@ -20,7 +20,7 @@ impl<'s> System<'s> for KillAfterSystem {
     );
 
     fn run(&mut self, (entities, ka_col, ka_time, collisions, time): Self::SystemData) {
-        // Kill all entites that have been collided with and have
+        // Kill all entities that have been collided with and have
         // the kill after collision marker
         for (entity, _, _) in (&entities, ka_col.mask(), collisions.mask()).join() {
             // Should Handle unwrap some day

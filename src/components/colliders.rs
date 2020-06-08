@@ -44,7 +44,7 @@ impl Collisions {
         if self.bitset.contains(id) {
             // If the value is already in the bitset trade data
             // with the currently existing data
-            // SAFETY: the if statement guarentees that the entry is alreay set
+            // SAFETY: the if statement guarantees that the entry is already set
             #[allow(unsafe_code)]
             unsafe {
                 let entry = self.entries.get_mut(id);

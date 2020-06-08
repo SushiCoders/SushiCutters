@@ -77,7 +77,7 @@ impl<'s> System<'s> for CollisionsSystem {
             for (other_entity, other_circle, other_transform, _) in
                 (&entities, &circles, &transforms, !&checked).join()
             {
-                // You don't need to check equality the negative join guarentees
+                // You don't need to check equality the negative join guarantees
                 // the circle entity and other entity are different entities
                 let other_translation = global_translation(other_transform);
                 let other_radius = other_circle.radius;

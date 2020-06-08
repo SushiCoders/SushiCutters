@@ -20,7 +20,7 @@ use crate::systems::score::ScoreText;
 pub const ARENA_HEIGHT: f32 = 100.0;
 pub const ARENA_WIDTH: f32 = 100.0;
 
-pub fn initialise_camera(world: &mut World) {
+pub fn initialize_camera(world: &mut World) {
     // Setup camera in a way that our screen covers whole arena and (0, 0) is in the bottom left.
     let mut transform = Transform::default();
     transform.set_translation_xyz(ARENA_WIDTH * 0.5, ARENA_HEIGHT * 0.5, 1.0);
@@ -90,7 +90,7 @@ impl SimpleState for SushiCutters {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
 
-        initialise_camera(world);
+        initialize_camera(world);
 
         if let Some(init) = self.initializer {
             init(world);
