@@ -1,10 +1,13 @@
 //! Stolen almost in it's entirety from pong
 use amethyst::{
     core::{math::Vector3, Transform},
-    ecs::prelude::{Entities, Entity, Join, ReadStorage, System, WriteStorage},
+    ecs::{
+        hibitset::BitSet,
+        prelude::{Entities, Entity, Join, ReadStorage, System, WriteStorage},
+    },
 };
 
-use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions, Player};
+use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions};
 use crate::util::transform::global_translation;
 
 pub struct CollisionsSystem;
@@ -15,17 +18,16 @@ impl<'s> System<'s> for CollisionsSystem {
         Entities<'s>,
         ReadStorage<'s, BoxCollider>,
         ReadStorage<'s, CircleCollider>,
-        WriteStorage<'s, Player>,
         ReadStorage<'s, Transform>,
         WriteStorage<'s, Collisions>,
     );
 
-    fn run(
-        &mut self,
-        (entities, boxes, circles, players, transforms, mut collisions): Self::SystemData,
-    ) {
+    fn run(&mut self, (entities, boxes, circles, transforms, mut collisions): Self::SystemData) {
         // Clear all collisions from the previous frame
         collisions.clear();
+
+        // Create a new bitset to prevent rechecking an entity that was already checked
+        let mut checked = BitSet::new();
 
         // Check whether a ball collided, and bounce off accordingly.
         //
@@ -62,21 +64,31 @@ impl<'s> System<'s> for CollisionsSystem {
                     add_collision(&mut collisions, box_entity, circle_entity);
                 }
             }
-            for (player_entity, _player, player_circle, player_transform) in
-                (&entities, &players, &circles, &transforms).join()
+
+            // Add the current entity to the checked set
+            // Makes sure that the current element isn't looped through
+            // in any subsequent subloops
+            checked.add(circle_entity.id());
+
+            // Use a join exclude to exclude all other circles we have
+            // already seen
+            // Tested and verified to prevent double collisions
+            // Also massively reduces computation time
+            for (other_entity, other_circle, other_transform, _) in
+                (&entities, &circles, &transforms, !&checked).join()
             {
-                if player_transform != circle_transform {
-                    let player_translation = global_translation(player_transform);
-                    let player_radius = player_circle.radius;
-                    if in_circle(
-                        player_radius,
-                        &player_translation,
-                        circle.radius,
-                        &translation,
-                    ) {
-                        add_collision(&mut collisions, circle_entity, player_entity);
-                        add_collision(&mut collisions, player_entity, circle_entity);
-                    }
+                // You don't need to check equality the negative join guarentees
+                // the circle entity and other entity are different entities
+                let other_translation = global_translation(other_transform);
+                let other_radius = other_circle.radius;
+                if in_circle(
+                    other_radius,
+                    &other_translation,
+                    circle.radius,
+                    &translation,
+                ) {
+                    add_collision(&mut collisions, circle_entity, other_entity);
+                    add_collision(&mut collisions, other_entity, circle_entity);
                 }
             }
         }
@@ -105,15 +117,11 @@ fn in_circle(
 fn add_collision(collisions: &mut WriteStorage<Collisions>, source: Entity, target: Entity) {
     let component = collisions.get_mut(target);
     if let Some(c) = component {
-        c.entries.push(CollisionData { entity: source });
+        c.insert(source, CollisionData);
     } else {
-        collisions
-            .insert(
-                target,
-                Collisions {
-                    entries: vec![CollisionData { entity: source }],
-                },
-            )
-            .unwrap();
+        let mut c = Collisions::default();
+        c.insert(source, CollisionData);
+
+        collisions.insert(target, c).unwrap();
     }
 }
