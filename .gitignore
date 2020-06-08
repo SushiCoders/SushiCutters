@@ -166,3 +166,6 @@ $RECYCLE.BIN/
 
 # Code workspace
 *.code-workspace
+
+flame.svg
+perf.data*

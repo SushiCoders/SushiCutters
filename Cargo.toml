@@ -10,6 +10,11 @@ readme = "README.md"
 keywords = ["sushicutters", "game"]
 categories = ["games"]
 
+# Add debug symbols for use with profiling
+# Remove this for a real release
+[profile.release]
+debug = true
+
 [dependencies]
 amethyst = "0.15.0"
 serde = { version = "1.0.110", features = ["derive"] }

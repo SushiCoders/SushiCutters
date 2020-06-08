@@ -14,14 +14,18 @@ pub struct Scene {
     pub initializer: SceneInitializer,
 }
 
-pub const SCENES: [Scene; 2] = [
+pub const SCENES: [Scene; 3] = [
     Scene {
         name: "basic",
         initializer: initialize_raw_colliders as SceneInitializer,
     },
     Scene {
         name: "enemies",
-        initializer: initialize_enemies as SceneInitializer,
+        initializer: initialize_enemies_rand as SceneInitializer,
+    },
+    Scene {
+        name: "enemies_bench",
+        initializer: initialize_enemies_bench as SceneInitializer,
     },
 ];
 
@@ -53,10 +57,19 @@ pub fn initialize_raw_colliders(world: &mut World) {
     create_test_colliders(world, transforms);
 }
 
-pub fn initialize_enemies(world: &mut World) {
+pub fn initialize_enemies_rand(world: &mut World) {
+    use rand::distributions::{Distribution, Uniform};
+    let enemy_count = Uniform::new(1, 20).sample(&mut rand::thread_rng());
+    initialize_enemies(world, enemy_count);
+}
+
+pub fn initialize_enemies_bench(world: &mut World) {
+    initialize_enemies(world, 5000);
+}
+
+fn initialize_enemies(world: &mut World, count: usize) {
     use rand::distributions::{Distribution, Uniform};
     let mut rng = rand::thread_rng();
-    let enemy_count = Uniform::new(1, 20);
     let direction = Uniform::new(-1.0, 1.0);
     let velocity = Uniform::new(f32::EPSILON, 50.0);
     let enemy_x = Uniform::new(
@@ -67,7 +80,7 @@ pub fn initialize_enemies(world: &mut World) {
         enemy::HITCIRCLE_RADIUS,
         ARENA_HEIGHT - enemy::HITCIRCLE_RADIUS,
     );
-    for _ in 1..=enemy_count.sample(&mut rng) {
+    for _ in 1..=count {
         enemy::spawn_enemy(
             world,
             direction.sample(&mut rng) * enemy_x.sample(&mut rng),
