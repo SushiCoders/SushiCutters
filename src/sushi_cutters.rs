@@ -32,6 +32,24 @@ pub fn initialize_camera(world: &mut World) {
         .build();
 }
 
+pub fn get_scene_cli() -> Option<SushiCutters> {
+    let args: Vec<String> = std::env::args().collect();
+
+    if args.len() < 2 {
+        None
+    } else {
+        let scene_name = &args[1];
+
+        if let Some(scene) = scenes::get_scene(scene_name) {
+            Some(SushiCutters {
+                initializer: Some(scene.initializer),
+            })
+        } else {
+            panic!("`{}` is an invalid scene name!", scene_name);
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct SceneSelect;
 
@@ -50,6 +68,17 @@ impl SimpleState for SceneSelect {
 
     fn on_stop(&mut self, _data: StateData<'_, GameData<'_, '_>>) {
         // TODO: Clean up UI
+    }
+
+    // This is a bit messy really should be done in a different way
+    // but there is no way to transition directly from on_start
+    // There should be a way to not call this every frame though
+    fn update(&mut self, _data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        if let Some(state) = get_scene_cli() {
+            SimpleTrans::Switch(Box::new(state))
+        } else {
+            SimpleTrans::None
+        }
     }
 
     fn handle_event(

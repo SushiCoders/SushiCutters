@@ -29,6 +29,10 @@ pub const SCENES: [Scene; 3] = [
     },
 ];
 
+pub fn get_scene(scene_name: &str) -> Option<&'static Scene> {
+    SCENES.iter().find(|x| x.name == scene_name)
+}
+
 fn create_test_colliders(world: &mut World, transforms: Vec<Transform>) {
     let health = Health { amount: 10.0 };
     let collider = CircleCollider {
