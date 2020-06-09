@@ -68,7 +68,20 @@ pub fn initialize_enemies_rand(world: &mut World) {
 }
 
 pub fn initialize_enemies_bench(world: &mut World) {
-    initialize_enemies(world, 5000);
+    const DEFAULT: usize = 5000;
+
+    let enemy_count = if let Ok(value) = std::env::var("ENEMY_COUNT") {
+        if let Ok(value) = value.parse() {
+            value
+        } else {
+            log::warn!("Invalid enemy count: '{}'", value);
+            DEFAULT
+        }
+    } else {
+        DEFAULT
+    };
+
+    initialize_enemies(world, enemy_count);
 }
 
 fn initialize_enemies(world: &mut World, count: usize) {
