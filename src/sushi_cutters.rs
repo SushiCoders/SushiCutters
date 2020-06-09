@@ -2,8 +2,11 @@
 ///! There is a bit of code that was taken from the pong example which will be phased out in time
 use crate::{
     components::initialize_player, scenes, scenes::SceneInitializer, systems::score::ScoreText,
-    util::frame_bench::FrameBench,
 };
+
+#[cfg(feature = "benchmark")]
+use crate::util::frame_bench::FrameBench;
+
 use amethyst::{
     assets::Loader,
     core::transform::Transform,
@@ -112,13 +115,16 @@ impl SimpleState for SceneSelect {
 pub struct SushiCutters {
     initializer: Option<SceneInitializer>,
 
+    #[cfg(feature = "benchmark")]
     frame_bench: FrameBench,
 }
 
 impl SushiCutters {
     fn new(initializer: SceneInitializer) -> Self {
         Self {
+            #[cfg(feature = "benchmark")]
             frame_bench: FrameBench::default(),
+
             initializer: Some(initializer),
         }
     }
@@ -138,14 +144,25 @@ impl SimpleState for SushiCutters {
     }
 
     fn on_stop(&mut self, _: StateData<'_, GameData<'_, '_>>) {
+        #[cfg(feature = "benchmark")]
         log::info!("{}", self.frame_bench);
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
-        use amethyst::core::Time;
-        let time: Time = *data.world.read_resource::<Time>();
-        self.frame_bench
-            .advance_frame(time.delta_time().as_secs_f64());
+    fn update(&mut self, _data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        #[cfg(feature = "benchmark")]
+        {
+            use amethyst::core::Time;
+            let time: Time = *_data.world.read_resource::<Time>();
+            // We could use the absolute frametime and frame number
+            // but by aggregating it ourselves we know that the counter
+            // only starts counting AFTER everything is initialized
+            self.frame_bench
+                .advance_frame(time.delta_time().as_secs_f64());
+
+            if time.absolute_time_seconds() > 30_f64 {
+                return SimpleTrans::Quit;
+            }
+        }
 
         SimpleTrans::None
     }
