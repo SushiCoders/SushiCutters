@@ -1,6 +1,9 @@
 ///! Core `SushiCutters` module
 ///! There is a bit of code that was taken from the pong example which will be phased out in time
-use crate::{components::initialize_player, scenes, scenes::SceneInitializer};
+use crate::{
+    components::initialize_player, scenes, scenes::SceneInitializer, systems::score::ScoreText,
+    util::frame_bench::FrameBench,
+};
 use amethyst::{
     assets::Loader,
     core::transform::Transform,
@@ -13,8 +16,6 @@ use amethyst::{
 use log::{info, warn};
 
 extern crate rand;
-
-use crate::systems::score::ScoreText;
 
 // Maybe make these into a resource?
 pub const ARENA_HEIGHT: f32 = 100.0;
@@ -41,9 +42,7 @@ pub fn get_scene_cli() -> Option<SushiCutters> {
         let scene_name = &args[1];
 
         if let Some(scene) = scenes::get_scene(scene_name) {
-            Some(SushiCutters {
-                initializer: Some(scene.initializer),
-            })
+            Some(SushiCutters::new(scene.initializer))
         } else {
             panic!("`{}` is an invalid scene name!", scene_name);
         }
@@ -96,8 +95,8 @@ impl SimpleState for SceneSelect {
                     if let Some(num) = c.to_digit(10) {
                         let num: usize = num as usize;
                         if num < s.len() {
-                            let initializer = Some(s[num].initializer);
-                            return SimpleTrans::Switch(Box::new(SushiCutters { initializer }));
+                            let initializer = s[num].initializer;
+                            return SimpleTrans::Switch(Box::new(SushiCutters::new(initializer)));
                         } else {
                             warn!("{} is out of bounds", num);
                         }
@@ -110,9 +109,19 @@ impl SimpleState for SceneSelect {
     }
 }
 
-#[derive(Default)]
 pub struct SushiCutters {
     initializer: Option<SceneInitializer>,
+
+    frame_bench: FrameBench,
+}
+
+impl SushiCutters {
+    fn new(initializer: SceneInitializer) -> Self {
+        Self {
+            frame_bench: FrameBench::default(),
+            initializer: Some(initializer),
+        }
+    }
 }
 
 impl SimpleState for SushiCutters {
@@ -126,6 +135,19 @@ impl SimpleState for SushiCutters {
         }
 
         initialize_player(world);
+    }
+
+    fn on_stop(&mut self, _: StateData<'_, GameData<'_, '_>>) {
+        log::info!("{}", self.frame_bench);
+    }
+
+    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+        use amethyst::core::Time;
+        let time: Time = *data.world.read_resource::<Time>();
+        self.frame_bench
+            .advance_frame(time.delta_time().as_secs_f64());
+
+        SimpleTrans::None
     }
 }
 
