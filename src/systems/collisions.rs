@@ -1,6 +1,9 @@
 //! Stolen almost in it's entirety from pong
 use amethyst::{
-    core::{math::Vector3, Transform},
+    core::{
+        math::{Vector2, Vector3},
+        Transform,
+    },
     ecs::{
         hibitset::BitSet,
         prelude::{Entities, Entity, Join, ReadStorage, System, Write, WriteStorage},
@@ -116,9 +119,9 @@ impl<'s> System<'s> for CollisionsSystem {
                 let other_radius = other_circle.radius;
                 if in_circle(
                     other_radius,
-                    &other_translation,
+                    other_translation.xy(),
                     circle.radius,
-                    &translation,
+                    translation.xy(),
                 ) {
                     add_collision(
                         &mut self.collision_pool,
@@ -146,9 +149,9 @@ fn point_in_rect(x: f32, y: f32, left: f32, bottom: f32, right: f32, top: f32) -
 
 fn in_circle(
     player_radius: f32,
-    player_translation: &Vector3<f32>,
+    player_translation: Vector2<f32>,
     circle_radius: f32,
-    circle_translation: &Vector3<f32>,
+    circle_translation: Vector2<f32>,
 ) -> bool {
     (player_radius + circle_radius).powi(2)
         >= (player_translation - circle_translation).norm_squared()
