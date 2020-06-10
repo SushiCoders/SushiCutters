@@ -18,7 +18,10 @@ use crate::util::frame_bench::FrameBench;
 // Will change later
 pub struct FrameBench;
 
-pub struct CollisionsSystem;
+#[derive(Default)]
+pub struct CollisionsSystem {
+    collision_pool: Vec<Collisions>,
+}
 
 impl<'s> System<'s> for CollisionsSystem {
     #[allow(clippy::type_complexity)]
@@ -41,7 +44,10 @@ impl<'s> System<'s> for CollisionsSystem {
         let _scope = bench.time_scope("Collisions".to_string());
 
         // Clear all collisions from the previous frame
-        collisions.clear();
+        // And add them into the collision pool
+        for x in collisions.drain().join() {
+            self.collision_pool.push(x);
+        }
 
         // Create a new bitset to prevent rechecking an entity that was already checked
         let mut checked = BitSet::new();
@@ -77,8 +83,18 @@ impl<'s> System<'s> for CollisionsSystem {
                     box_y + box_col.height + circle.radius,
                 ) {
                     // Add a collision to both the circles collisions and the boxes collisions
-                    add_collision(&mut collisions, circle_entity, box_entity);
-                    add_collision(&mut collisions, box_entity, circle_entity);
+                    add_collision(
+                        &mut self.collision_pool,
+                        &mut collisions,
+                        circle_entity,
+                        box_entity,
+                    );
+                    add_collision(
+                        &mut self.collision_pool,
+                        &mut collisions,
+                        box_entity,
+                        circle_entity,
+                    );
                 }
             }
 
@@ -104,8 +120,18 @@ impl<'s> System<'s> for CollisionsSystem {
                     circle.radius,
                     &translation,
                 ) {
-                    add_collision(&mut collisions, circle_entity, other_entity);
-                    add_collision(&mut collisions, other_entity, circle_entity);
+                    add_collision(
+                        &mut self.collision_pool,
+                        &mut collisions,
+                        circle_entity,
+                        other_entity,
+                    );
+                    add_collision(
+                        &mut self.collision_pool,
+                        &mut collisions,
+                        other_entity,
+                        circle_entity,
+                    );
                 }
             }
         }
@@ -131,12 +157,25 @@ fn in_circle(
 /// Add a collision from one entity to another
 ///
 /// If there is no collision component then add one with the collision
-fn add_collision(collisions: &mut WriteStorage<Collisions>, source: Entity, target: Entity) {
+fn add_collision(
+    pool: &mut Vec<Collisions>,
+    collisions: &mut WriteStorage<Collisions>,
+    source: Entity,
+    target: Entity,
+) {
     let component = collisions.get_mut(target);
     if let Some(c) = component {
         c.insert(source, CollisionData);
     } else {
-        let mut c = Collisions::default();
+        // If there are extra elements in the pool then reset the element
+        // and use it or create a new one
+        let mut c = if let Some(mut c) = pool.pop() {
+            c.reset();
+            c
+        } else {
+            Collisions::default()
+        };
+
         c.insert(source, CollisionData);
 
         collisions.insert(target, c).unwrap();

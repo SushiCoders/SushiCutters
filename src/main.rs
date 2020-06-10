@@ -66,7 +66,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(UiBundle::<InputBindingTypes>::new())?
         .with_bundle(AudioBundle::default())?
         .with(
-            systems::CollisionsSystem,
+            systems::CollisionsSystem::default(),
             "collisions_system",
             &["transform_system"],
         )
