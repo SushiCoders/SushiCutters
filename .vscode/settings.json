@@ -10,6 +10,7 @@
         "delet",
         "filt",
         "hibitset",
+        "itertools",
         "powi",
         "serde",
         "unmangle",

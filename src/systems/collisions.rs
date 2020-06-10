@@ -4,10 +4,7 @@ use amethyst::{
         math::{Vector2, Vector3},
         Transform,
     },
-    ecs::{
-        hibitset::BitSet,
-        prelude::{Entities, Entity, Join, ReadStorage, System, Write, WriteStorage},
-    },
+    ecs::prelude::{Entities, Entity, Join, ReadStorage, System, Write, WriteStorage},
 };
 
 use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions};
@@ -21,12 +18,17 @@ use crate::util::frame_bench::FrameBench;
 // Will change later
 pub struct FrameBench;
 
+type CacheFake<'q> = (Entity, &'q u8, &'q u8);
+type CacheReal<'q> = (Entity, &'q CircleCollider, &'q Transform);
+
 #[derive(Default)]
-pub struct CollisionsSystem {
+pub struct CollisionsSystem<'q> {
     collision_pool: Vec<Collisions>,
+    // Create a cache that is the right size but doesn't have the right types
+    cache: Vec<CacheFake<'q>>,
 }
 
-impl<'s> System<'s> for CollisionsSystem {
+impl<'s, 'q> System<'s> for CollisionsSystem<'q> {
     #[allow(clippy::type_complexity)]
     type SystemData = (
         Entities<'s>,
@@ -52,14 +54,20 @@ impl<'s> System<'s> for CollisionsSystem {
             self.collision_pool.push(x);
         }
 
-        // Create a new bitset to prevent rechecking an entity that was already checked
-        let mut checked = BitSet::new();
+        // Create a vec to collect all the circle entities
+        // Transmute the vector to be the right type
+        // Forgive me for I have done evil things
+        #[allow(unsafe_code)]
+        let cache: &mut Vec<CacheReal> =
+            unsafe { &mut *(&mut self.cache as *mut Vec<CacheFake> as *mut Vec<CacheReal>) };
 
         // Check whether a ball collided, and bounce off accordingly.
         //
         // We also check for the velocity of the ball every time, to prevent multiple collisions
         // from occurring.
         for (circle_entity, circle, circle_transform) in (&entities, &circles, &transforms).join() {
+            cache.push((circle_entity, circle, circle_transform));
+
             let translation = global_translation(circle_transform);
             let circle_x = translation.x;
             let circle_y = translation.y;
@@ -100,44 +108,27 @@ impl<'s> System<'s> for CollisionsSystem {
                     );
                 }
             }
+        }
 
-            // Add the current entity to the checked set
-            // Makes sure that the current element isn't looped through
-            // in any subsequent subloops
-            checked.add(circle_entity.id());
-
-            // Use a join exclude to exclude all other circles we have
-            // already seen
-            // Tested and verified to prevent double collisions
-            // Also massively reduces computation time
-            for (other_entity, other_circle, other_transform, _) in
-                (&entities, &circles, &transforms, !&checked).join()
-            {
-                // You don't need to check equality the negative join guarantees
-                // the circle entity and other entity are different entities
-                let other_translation = global_translation(other_transform);
-                let other_radius = other_circle.radius;
+        // Pull circle data once and only once then iterate over it
+        // Having the data cached is a lot cheaper than joining on it
+        for (i, circle) in cache.iter().enumerate() {
+            for other in cache[i + 1..].iter() {
+                let translation = global_translation(circle.2);
+                let other_translation = global_translation(other.2);
                 if in_circle(
-                    other_radius,
+                    other.1.radius,
                     other_translation.xy(),
-                    circle.radius,
+                    circle.1.radius,
                     translation.xy(),
                 ) {
-                    add_collision(
-                        &mut self.collision_pool,
-                        &mut collisions,
-                        circle_entity,
-                        other_entity,
-                    );
-                    add_collision(
-                        &mut self.collision_pool,
-                        &mut collisions,
-                        other_entity,
-                        circle_entity,
-                    );
+                    add_collision(&mut self.collision_pool, &mut collisions, circle.0, other.0);
+                    add_collision(&mut self.collision_pool, &mut collisions, other.0, circle.0);
                 }
             }
         }
+
+        cache.clear();
     }
 }
 
