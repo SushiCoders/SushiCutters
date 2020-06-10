@@ -36,8 +36,8 @@ impl fmt::Display for FrameBench {
         let avg_frame = self.total / f64::from(self.frame_count);
         write!(
             f,
-            "Performance summary: \nAvg FPS: {}\nAvg frame time: {}\nShortest frame time: {}\nLongest frame time: {}\nTotal Time: {}",
-            fps, avg_frame, self.min, self.max, self.total
+            "Performance summary: \nAvg FPS: {}\nAvg frame time: {}\nShortest frame time: {}\nLongest frame time: {}\nTotal Time: {}\nFrame Count: {}",
+            fps, avg_frame, self.min, self.max, self.total, self.frame_count
         )
     }
 }

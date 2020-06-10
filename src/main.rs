@@ -11,7 +11,7 @@ use amethyst::audio::AudioBundle;
 use amethyst::input::InputBundle;
 use amethyst::ui::{RenderUi, UiBundle};
 use amethyst::{
-    core::transform::TransformBundle,
+    core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
     prelude::*,
     renderer::{
         plugins::{RenderDebugLines, RenderFlat2D, RenderToWindow},
@@ -92,7 +92,9 @@ fn main() -> amethyst::Result<()> {
             &["collisions_system", "input_system"],
         );
 
-    let mut game = Application::new(assets_dir, SceneSelect::default(), game_data)?;
+    let mut game = Application::build(assets_dir, SceneSelect::default())?
+        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 144)
+        .build(game_data)?;
     game.run();
 
     Ok(())

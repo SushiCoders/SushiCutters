@@ -169,3 +169,5 @@ $RECYCLE.BIN/
 
 flame.svg
 perf.data*
+massif.out*
+heaptrack*

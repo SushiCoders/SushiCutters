@@ -8,9 +8,11 @@
         "Srgba",
         "clippy",
         "delet",
+        "filt",
         "hibitset",
         "powi",
         "serde",
+        "unmangle",
         "winit"
     ]
 }

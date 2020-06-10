@@ -81,6 +81,8 @@ pub fn initialize_enemies_bench(world: &mut World) {
         DEFAULT
     };
 
+    log::info!("`enemies_bench` starting with {} enemies", enemy_count);
+
     initialize_enemies(world, enemy_count);
 }
 
