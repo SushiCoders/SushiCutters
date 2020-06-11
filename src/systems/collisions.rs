@@ -18,17 +18,13 @@ use crate::util::frame_bench::FrameBench;
 // Will change later
 pub struct FrameBench;
 
-type CacheFake<'q> = (Entity, &'q u8, &'q u8);
-type CacheReal<'q> = (Entity, &'q CircleCollider, &'q Transform);
-
 #[derive(Default)]
-pub struct CollisionsSystem<'q> {
+pub struct CollisionsSystem {
     collision_pool: Vec<Collisions>,
-    // Create a cache that is the right size but doesn't have the right types
-    cache: Vec<CacheFake<'q>>,
+    allocator: bumpalo::Bump,
 }
 
-impl<'s, 'q> System<'s> for CollisionsSystem<'q> {
+impl<'s> System<'s> for CollisionsSystem {
     #[allow(clippy::type_complexity)]
     type SystemData = (
         Entities<'s>,
@@ -54,12 +50,8 @@ impl<'s, 'q> System<'s> for CollisionsSystem<'q> {
             self.collision_pool.push(x);
         }
 
-        // Create a vec to collect all the circle entities
-        // Transmute the vector to be the right type
-        // Forgive me for I have done evil things
-        #[allow(unsafe_code)]
-        let cache: &mut Vec<CacheReal> =
-            unsafe { &mut *(&mut self.cache as *mut Vec<CacheFake> as *mut Vec<CacheReal>) };
+        // Create a new cache on the top of the prereserved memory
+        let mut cache = bumpalo::collections::Vec::new_in(&self.allocator);
 
         // Check whether a ball collided, and bounce off accordingly.
         //
@@ -128,7 +120,13 @@ impl<'s, 'q> System<'s> for CollisionsSystem<'q> {
             }
         }
 
+        // Clear the cache to drop all the values
+        // This will probably be optimized out since afaik since references
+        // and entities don't have anything that they need to drop yet
         cache.clear();
+        // Drop needs to be explicit so that we can reset the allocator pointer
+        drop(cache);
+        self.allocator.reset();
     }
 }
 
