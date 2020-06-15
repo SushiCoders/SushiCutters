@@ -4,21 +4,9 @@ rm bench.out
 ./copy_assets
 cargo build --release --features=benchmark
 
-export ENEMY_COUNT=5000
-echo ENEMY_COUNT=5000 >> bench.out
-target/release/sushi_cutters enemies_bench
-export ENEMY_COUNT=1000
-echo ENEMY_COUNT=1000 >> bench.out
-target/release/sushi_cutters enemies_bench
-export ENEMY_COUNT=500
-echo ENEMY_COUNT=500 >> bench.out
-target/release/sushi_cutters enemies_bench
-export ENEMY_COUNT=100
-echo ENEMY_COUNT=100 >> bench.out
-target/release/sushi_cutters enemies_bench
-export ENEMY_COUNT=50
-echo ENEMY_COUNT=50 >> bench.out
-target/release/sushi_cutters enemies_bench
-export ENEMY_COUNT=10
-echo ENEMY_COUNT=10 >> bench.out
-target/release/sushi_cutters enemies_bench
+for i in 5000 1000 500 100 50 10
+do
+    export ENEMY_COUNT=$i
+    echo "ENEMY_COUNT=$i" >> bench.out
+    target/release/sushi_cutters enemies_bench
+done
