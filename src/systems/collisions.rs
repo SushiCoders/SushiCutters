@@ -3,12 +3,20 @@ use amethyst::{
     core::{math::Vector3, Transform},
     ecs::{
         hibitset::BitSet,
-        prelude::{Entities, Entity, Join, ReadStorage, System, WriteStorage},
+        prelude::{Entities, Entity, Join, ReadStorage, System, Write, WriteStorage},
     },
 };
 
 use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions};
 use crate::util::transform::global_translation;
+
+#[cfg(feature = "benchmark")]
+use crate::util::frame_bench::FrameBench;
+#[cfg(not(feature = "benchmark"))]
+#[derive(Default)]
+// This only exists to make sure the nonbenchmark code works
+// Will change later
+pub struct FrameBench;
 
 pub struct CollisionsSystem;
 
@@ -20,9 +28,18 @@ impl<'s> System<'s> for CollisionsSystem {
         ReadStorage<'s, CircleCollider>,
         ReadStorage<'s, Transform>,
         WriteStorage<'s, Collisions>,
+        Write<'s, FrameBench>,
     );
 
-    fn run(&mut self, (entities, boxes, circles, transforms, mut collisions): Self::SystemData) {
+    #[allow(unused_mut, unused_variables)]
+    fn run(
+        &mut self,
+        (entities, boxes, circles, transforms, mut collisions, mut bench): Self::SystemData,
+    ) {
+        // We want this to last the whole scope so we must store it as a variable
+        #[cfg(feature = "benchmark")]
+        let _scope = bench.time_scope("Collisions".to_string());
+
         // Clear all collisions from the previous frame
         collisions.clear();
 

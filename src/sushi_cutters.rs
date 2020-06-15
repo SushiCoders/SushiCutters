@@ -114,17 +114,11 @@ impl SimpleState for SceneSelect {
 
 pub struct SushiCutters {
     initializer: Option<SceneInitializer>,
-
-    #[cfg(feature = "benchmark")]
-    frame_bench: FrameBench,
 }
 
 impl SushiCutters {
     fn new(initializer: SceneInitializer) -> Self {
         Self {
-            #[cfg(feature = "benchmark")]
-            frame_bench: FrameBench::default(),
-
             initializer: Some(initializer),
         }
     }
@@ -133,6 +127,9 @@ impl SushiCutters {
 impl SimpleState for SushiCutters {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
+
+        #[cfg(feature = "benchmark")]
+        world.insert(FrameBench::default());
 
         initialize_camera(world);
 
@@ -143,21 +140,24 @@ impl SimpleState for SushiCutters {
         initialize_player(world);
     }
 
-    fn on_stop(&mut self, _: StateData<'_, GameData<'_, '_>>) {
+    fn on_stop(&mut self, _data: StateData<'_, GameData<'_, '_>>) {
         #[cfg(feature = "benchmark")]
-        log::info!("{}", self.frame_bench);
+        {
+            let bench = _data.world.read_resource::<FrameBench>();
+            log::info!("{}", *bench);
+        }
     }
 
     fn update(&mut self, _data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
         #[cfg(feature = "benchmark")]
         {
             use amethyst::core::Time;
+            let mut bench = _data.world.write_resource::<FrameBench>();
             let time: Time = *_data.world.read_resource::<Time>();
             // We could use the absolute frametime and frame number
             // but by aggregating it ourselves we know that the counter
             // only starts counting AFTER everything is initialized
-            self.frame_bench
-                .advance_frame(time.delta_time().as_secs_f64());
+            bench.advance_frame(time.delta_time().as_secs_f64());
 
             if time.absolute_time_seconds() > 30_f64 {
                 return SimpleTrans::Quit;
