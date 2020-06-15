@@ -1,7 +1,9 @@
 #!/bin/sh
 
 rm bench.out
+./copy_assets
 cargo build --release --features=benchmark
+
 export ENEMY_COUNT=5000
 echo ENEMY_COUNT=5000 >> bench.out
 target/release/sushi_cutters enemies_bench

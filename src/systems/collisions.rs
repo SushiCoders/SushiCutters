@@ -1,10 +1,11 @@
-//! Stolen almost in it's entirety from pong
+#![allow(clippy::type_repetition_in_bounds)]
+
 use amethyst::{
     core::{
         math::{Vector2, Vector3},
         Transform,
     },
-    ecs::prelude::{Entities, Entity, Join, ReadStorage, System, Write, WriteStorage},
+    ecs::prelude::*,
 };
 
 use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions};
@@ -12,11 +13,6 @@ use crate::util::transform::global_translation;
 
 #[cfg(feature = "benchmark")]
 use crate::util::frame_bench::FrameBench;
-#[cfg(not(feature = "benchmark"))]
-#[derive(Default)]
-// This only exists to make sure the nonbenchmark code works
-// Will change later
-pub struct FrameBench;
 
 #[derive(Default)]
 pub struct CollisionsSystem {
@@ -24,21 +20,33 @@ pub struct CollisionsSystem {
     allocator: bumpalo::Bump,
 }
 
-impl<'s> System<'s> for CollisionsSystem {
-    #[allow(clippy::type_complexity)]
-    type SystemData = (
-        Entities<'s>,
-        ReadStorage<'s, BoxCollider>,
-        ReadStorage<'s, CircleCollider>,
-        ReadStorage<'s, Transform>,
-        WriteStorage<'s, Collisions>,
-        Write<'s, FrameBench>,
-    );
+#[derive(SystemData)]
+pub struct CollisionsSystemData<'a> {
+    entities: Entities<'a>,
+    boxes: ReadStorage<'a, BoxCollider>,
+    circles: ReadStorage<'a, CircleCollider>,
+    transforms: ReadStorage<'a, Transform>,
+    collisions: WriteStorage<'a, Collisions>,
 
-    #[allow(unused_mut, unused_variables)]
+    #[cfg(feature = "benchmark")]
+    bench: Write<'a, FrameBench>,
+}
+
+impl<'s> System<'s> for CollisionsSystem {
+    type SystemData = CollisionsSystemData<'s>;
+
     fn run(
         &mut self,
-        (entities, boxes, circles, transforms, mut collisions, mut bench): Self::SystemData,
+        CollisionsSystemData {
+            entities,
+            boxes,
+            circles,
+            transforms,
+            mut collisions,
+
+            #[cfg(feature = "benchmark")]
+            mut bench,
+        }: Self::SystemData,
     ) {
         // We want this to last the whole scope so we must store it as a variable
         #[cfg(feature = "benchmark")]
