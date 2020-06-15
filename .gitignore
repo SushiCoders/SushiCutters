@@ -171,3 +171,4 @@ flame.svg
 perf.data*
 massif.out*
 heaptrack*
+bench.out*

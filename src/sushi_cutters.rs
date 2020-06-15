@@ -145,6 +145,7 @@ impl SimpleState for SushiCutters {
         {
             let bench = _data.world.read_resource::<FrameBench>();
             log::info!("{}", *bench);
+            bench.save_to_file().unwrap();
         }
     }
 

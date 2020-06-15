@@ -86,6 +86,28 @@ impl FrameBench {
         let bench = self.systems.entry(name).or_insert_with(BenchRes::default);
         bench.time_scope()
     }
+
+    // Saves to file. Uses an append so that we can have multiple benchmarks
+    // in the same file
+    //
+    // Uses an environment variable for benchmark name OR uses bench.out
+    pub fn save_to_file(&self) -> std::io::Result<()> {
+        use std::fs::OpenOptions;
+        use std::io::prelude::*;
+        let file_name: String = std::env::var("BENCHMARK_OUT").unwrap_or("bench.out".to_string());
+
+        let mut file = OpenOptions::new()
+            .create(true)
+            .write(true)
+            .append(true)
+            .open(file_name)
+            .unwrap();
+
+        writeln!(file, "{}", self)?;
+        writeln!(file, "-------------------")?;
+
+        Ok(())
+    }
 }
 
 impl fmt::Display for FrameBench {
