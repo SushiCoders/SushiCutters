@@ -8,6 +8,7 @@
         "Srgba",
         "bumpalo",
         "clippy",
+        "consts",
         "delet",
         "filt",
         "hibitset",

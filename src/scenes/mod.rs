@@ -14,7 +14,7 @@ pub struct Scene {
     pub initializer: SceneInitializer,
 }
 
-pub const SCENES: [Scene; 3] = [
+pub const SCENES: [Scene; 4] = [
     Scene {
         name: "basic",
         initializer: initialize_raw_colliders as SceneInitializer,
@@ -26,6 +26,10 @@ pub const SCENES: [Scene; 3] = [
     Scene {
         name: "enemies_bench",
         initializer: initialize_enemies_bench as SceneInitializer,
+    },
+    Scene {
+        name: "enemies_scaled",
+        initializer: initialize_enemies_scaled as SceneInitializer,
     },
 ];
 
@@ -64,31 +68,58 @@ pub fn initialize_raw_colliders(world: &mut World) {
 pub fn initialize_enemies_rand(world: &mut World) {
     use rand::distributions::{Distribution, Uniform};
     let enemy_count = Uniform::new(1, 20).sample(&mut rand::thread_rng());
-    initialize_enemies(world, enemy_count);
+    initialize_enemies(world, enemy_count, 4.0);
 }
 
 pub fn initialize_enemies_bench(world: &mut World) {
-    const DEFAULT: usize = 5000;
-
-    let enemy_count = if let Ok(value) = std::env::var("ENEMY_COUNT") {
-        if let Ok(value) = value.parse() {
-            value
-        } else {
-            log::warn!("Invalid enemy count: '{}'", value);
-            DEFAULT
-        }
-    } else {
-        DEFAULT
-    };
+    let enemy_count = get_enemy_count();
 
     log::info!("`enemies_bench` starting with {} enemies", enemy_count);
 
-    initialize_enemies(world, enemy_count);
+    initialize_enemies(world, enemy_count, 4.0);
 }
 
-fn initialize_enemies(world: &mut World, count: usize) {
+pub fn initialize_enemies_scaled(world: &mut World) {
+    let enemy_count = get_enemy_count();
+    let area_scale = get_area_scale();
+
+    log::info!(
+        "`enemies_scaled` starting with {} enemies and {} scale",
+        enemy_count,
+        area_scale
+    );
+
+    let area = ARENA_WIDTH * ARENA_HEIGHT;
+    // We want circles to cover 80% of the area
+    #[allow(clippy::cast_precision_loss)]
+    let size = ((area * area_scale) / (enemy_count as f32 * std::f32::consts::PI)).sqrt();
+
+    initialize_enemies(world, enemy_count, size);
+}
+
+fn get_variable<F: std::str::FromStr>(variable: &str, default: F) -> F {
+    if let Ok(value) = std::env::var(variable) {
+        if let Ok(value) = value.parse() {
+            value
+        } else {
+            log::warn!("Invalid {}: '{}'", variable, value);
+            default
+        }
+    } else {
+        default
+    }
+}
+
+fn get_enemy_count() -> usize {
+    get_variable("ENEMY_COUNT", 5000)
+}
+
+fn get_area_scale() -> f32 {
+    get_variable("AREA_SCALE", 0.8)
+}
+
+fn initialize_enemies(world: &mut World, count: usize, size: f32) {
     use rand::distributions::{Distribution, Uniform};
-    let size = 4.0;
     let mut rng = rand::thread_rng();
     let direction = Uniform::new(-1.0, 1.0);
     let velocity = Uniform::new(f32::EPSILON, 12.5 * size);
