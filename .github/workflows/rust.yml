@@ -15,7 +15,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout branch
+      uses: actions/checkout@v2
+    - name: Super-Linter
+      uses: github/super-linter@v2.0.0
     - name: Setup environment
       run: sudo apt-get update && sudo apt-get install -y gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev libssl-dev libx11-dev 
     - name: Check formatting
