@@ -88,24 +88,20 @@ pub fn initialize_enemies_bench(world: &mut World) {
 
 fn initialize_enemies(world: &mut World, count: usize) {
     use rand::distributions::{Distribution, Uniform};
+    let size = 4.0;
     let mut rng = rand::thread_rng();
     let direction = Uniform::new(-1.0, 1.0);
-    let velocity = Uniform::new(f32::EPSILON, 50.0);
-    let enemy_x = Uniform::new(
-        enemy::HITCIRCLE_RADIUS,
-        ARENA_WIDTH - enemy::HITCIRCLE_RADIUS,
-    );
-    let enemy_y = Uniform::new(
-        enemy::HITCIRCLE_RADIUS,
-        ARENA_HEIGHT - enemy::HITCIRCLE_RADIUS,
-    );
+    let velocity = Uniform::new(f32::EPSILON, 12.5 * size);
+    let enemy_x = Uniform::new(size, ARENA_WIDTH - size);
+    let enemy_y = Uniform::new(size, ARENA_HEIGHT - size);
     for _ in 1..=count {
         enemy::spawn_enemy(
             world,
-            direction.sample(&mut rng) * enemy_x.sample(&mut rng),
-            direction.sample(&mut rng) * enemy_y.sample(&mut rng),
-            velocity.sample(&mut rng),
-            velocity.sample(&mut rng),
+            enemy_x.sample(&mut rng),
+            enemy_y.sample(&mut rng),
+            direction.sample(&mut rng) * velocity.sample(&mut rng),
+            direction.sample(&mut rng) * velocity.sample(&mut rng),
+            size,
         );
     }
 }
