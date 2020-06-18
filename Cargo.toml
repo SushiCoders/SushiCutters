@@ -10,11 +10,17 @@ readme = "README.md"
 keywords = ["sushicutters", "game"]
 categories = ["games"]
 
+# Add debug symbols for use with profiling
+# Remove this for a real release
+[profile.release]
+debug = true
+
 [dependencies]
 amethyst = "0.15.0"
 serde = { version = "1.0.110", features = ["derive"] }
 rand = "0.7.3"
 log = "0.4.8"
+bumpalo = {version = "3.4.0", features = ["collections"]}
 
 [dev-dependencies.cargo-husky]
 version = "1.5.0"
@@ -26,4 +32,4 @@ default = ["vulkan"]
 empty = ["amethyst/empty"]
 metal = ["amethyst/metal"]
 vulkan = ["amethyst/vulkan"]
-enemies = []
+benchmark = []

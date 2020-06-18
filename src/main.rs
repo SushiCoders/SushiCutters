@@ -11,7 +11,7 @@ use amethyst::audio::AudioBundle;
 use amethyst::input::InputBundle;
 use amethyst::ui::{RenderUi, UiBundle};
 use amethyst::{
-    core::transform::TransformBundle,
+    core::{frame_limiter::FrameRateLimitStrategy, transform::TransformBundle},
     prelude::*,
     renderer::{
         plugins::{RenderDebugLines, RenderFlat2D, RenderToWindow},
@@ -24,12 +24,13 @@ use amethyst::{
 mod components;
 mod input;
 mod scenes;
+mod states;
 mod sushi_cutters;
 mod systems;
 mod util;
 
 use crate::input::bindings::InputBindingTypes;
-use crate::sushi_cutters::SceneSelect;
+use crate::states::initial_state;
 
 fn main() -> amethyst::Result<()> {
     amethyst::start_logger(Default::default());
@@ -66,7 +67,7 @@ fn main() -> amethyst::Result<()> {
         .with_bundle(UiBundle::<InputBindingTypes>::new())?
         .with_bundle(AudioBundle::default())?
         .with(
-            systems::CollisionsSystem,
+            systems::CollisionsSystem::default(),
             "collisions_system",
             &["transform_system"],
         )
@@ -80,7 +81,11 @@ fn main() -> amethyst::Result<()> {
             "kill_after_system",
             &["collisions_system"],
         )
-        .with(systems::ScoreSystem, "score_system", &["collisions_system"])
+        .with_system_desc(
+            systems::ScoreSystemDesc,
+            "score_system",
+            &["collisions_system"],
+        )
         .with(
             systems::DamageSystem,
             "damage_system",
@@ -92,7 +97,9 @@ fn main() -> amethyst::Result<()> {
             &["collisions_system", "input_system"],
         );
 
-    let mut game = Application::new(assets_dir, SceneSelect::default(), game_data)?;
+    let mut game = Application::build(assets_dir, initial_state())?
+        .with_frame_limit(FrameRateLimitStrategy::Unlimited, 144)
+        .build(game_data)?;
     game.run();
 
     Ok(())

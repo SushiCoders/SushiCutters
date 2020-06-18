@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cp -r assets target/release
+cp -r config target/release

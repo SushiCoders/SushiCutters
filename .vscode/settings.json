@@ -1,11 +1,20 @@
 {
     "cSpell.words": [
+        "Caton",
+        "Eamon",
         "Fira",
+        "Maeda",
+        "Masa",
         "Srgba",
+        "bumpalo",
         "clippy",
         "delet",
+        "filt",
         "hibitset",
+        "itertools",
         "powi",
+        "serde",
+        "unmangle",
         "winit"
     ]
 }

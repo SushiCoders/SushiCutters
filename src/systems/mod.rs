@@ -4,7 +4,7 @@ pub use self::collisions::CollisionsSystem;
 pub use self::damage::DamageSystem;
 pub use self::kill_after::KillAfterSystem;
 pub use self::player_control::PlayerControlSystem;
-pub use self::score::ScoreSystem;
+pub use self::score::ScoreSystemDesc;
 pub use self::velocity::VelocitySystem;
 
 pub mod border_collision;

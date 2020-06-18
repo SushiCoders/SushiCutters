@@ -1,39 +1,73 @@
-//! Stolen almost in it's entirety from pong
+#![allow(clippy::type_repetition_in_bounds)]
+
 use amethyst::{
-    core::{math::Vector3, Transform},
-    ecs::{
-        hibitset::BitSet,
-        prelude::{Entities, Entity, Join, ReadStorage, System, WriteStorage},
+    core::{
+        math::{Vector2, Vector3},
+        Transform,
     },
+    ecs::prelude::*,
 };
 
 use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions};
 use crate::util::transform::global_translation;
 
-pub struct CollisionsSystem;
+#[cfg(feature = "benchmark")]
+use crate::util::frame_bench::FrameBench;
+
+#[derive(Default)]
+pub struct CollisionsSystem {
+    collision_pool: Vec<Collisions>,
+    allocator: bumpalo::Bump,
+}
+
+#[derive(SystemData)]
+pub struct CollisionsSystemData<'a> {
+    entities: Entities<'a>,
+    boxes: ReadStorage<'a, BoxCollider>,
+    circles: ReadStorage<'a, CircleCollider>,
+    transforms: ReadStorage<'a, Transform>,
+    collisions: WriteStorage<'a, Collisions>,
+
+    #[cfg(feature = "benchmark")]
+    bench: Write<'a, FrameBench>,
+}
 
 impl<'s> System<'s> for CollisionsSystem {
-    #[allow(clippy::type_complexity)]
-    type SystemData = (
-        Entities<'s>,
-        ReadStorage<'s, BoxCollider>,
-        ReadStorage<'s, CircleCollider>,
-        ReadStorage<'s, Transform>,
-        WriteStorage<'s, Collisions>,
-    );
+    type SystemData = CollisionsSystemData<'s>;
 
-    fn run(&mut self, (entities, boxes, circles, transforms, mut collisions): Self::SystemData) {
+    fn run(
+        &mut self,
+        CollisionsSystemData {
+            entities,
+            boxes,
+            circles,
+            transforms,
+            mut collisions,
+
+            #[cfg(feature = "benchmark")]
+            mut bench,
+        }: Self::SystemData,
+    ) {
+        // We want this to last the whole scope so we must store it as a variable
+        #[cfg(feature = "benchmark")]
+        let _scope = bench.time_scope("Collisions".to_string());
+
         // Clear all collisions from the previous frame
-        collisions.clear();
+        // And add them into the collision pool
+        for x in collisions.drain().join() {
+            self.collision_pool.push(x);
+        }
 
-        // Create a new bitset to prevent rechecking an entity that was already checked
-        let mut checked = BitSet::new();
+        // Create a new cache on the top of the prereserved memory
+        let mut cache = bumpalo::collections::Vec::new_in(&self.allocator);
 
         // Check whether a ball collided, and bounce off accordingly.
         //
         // We also check for the velocity of the ball every time, to prevent multiple collisions
         // from occurring.
         for (circle_entity, circle, circle_transform) in (&entities, &circles, &transforms).join() {
+            cache.push((circle_entity, circle, circle_transform));
+
             let translation = global_translation(circle_transform);
             let circle_x = translation.x;
             let circle_y = translation.y;
@@ -60,38 +94,47 @@ impl<'s> System<'s> for CollisionsSystem {
                     box_y + box_col.height + circle.radius,
                 ) {
                     // Add a collision to both the circles collisions and the boxes collisions
-                    add_collision(&mut collisions, circle_entity, box_entity);
-                    add_collision(&mut collisions, box_entity, circle_entity);
-                }
-            }
-
-            // Add the current entity to the checked set
-            // Makes sure that the current element isn't looped through
-            // in any subsequent subloops
-            checked.add(circle_entity.id());
-
-            // Use a join exclude to exclude all other circles we have
-            // already seen
-            // Tested and verified to prevent double collisions
-            // Also massively reduces computation time
-            for (other_entity, other_circle, other_transform, _) in
-                (&entities, &circles, &transforms, !&checked).join()
-            {
-                // You don't need to check equality the negative join guarantees
-                // the circle entity and other entity are different entities
-                let other_translation = global_translation(other_transform);
-                let other_radius = other_circle.radius;
-                if in_circle(
-                    other_radius,
-                    &other_translation,
-                    circle.radius,
-                    &translation,
-                ) {
-                    add_collision(&mut collisions, circle_entity, other_entity);
-                    add_collision(&mut collisions, other_entity, circle_entity);
+                    add_collision(
+                        &mut self.collision_pool,
+                        &mut collisions,
+                        circle_entity,
+                        box_entity,
+                    );
+                    add_collision(
+                        &mut self.collision_pool,
+                        &mut collisions,
+                        box_entity,
+                        circle_entity,
+                    );
                 }
             }
         }
+
+        // Pull circle data once and only once then iterate over it
+        // Having the data cached is a lot cheaper than joining on it
+        for (i, circle) in cache.iter().enumerate() {
+            for other in cache[i + 1..].iter() {
+                let translation = global_translation(circle.2);
+                let other_translation = global_translation(other.2);
+                if in_circle(
+                    other.1.radius,
+                    other_translation.xy(),
+                    circle.1.radius,
+                    translation.xy(),
+                ) {
+                    add_collision(&mut self.collision_pool, &mut collisions, circle.0, other.0);
+                    add_collision(&mut self.collision_pool, &mut collisions, other.0, circle.0);
+                }
+            }
+        }
+
+        // Clear the cache to drop all the values
+        // This will probably be optimized out since afaik since references
+        // and entities don't have anything that they need to drop yet
+        cache.clear();
+        // Drop needs to be explicit so that we can reset the allocator pointer
+        drop(cache);
+        self.allocator.reset();
     }
 }
 
@@ -103,9 +146,9 @@ fn point_in_rect(x: f32, y: f32, left: f32, bottom: f32, right: f32, top: f32) -
 
 fn in_circle(
     player_radius: f32,
-    player_translation: &Vector3<f32>,
+    player_translation: Vector2<f32>,
     circle_radius: f32,
-    circle_translation: &Vector3<f32>,
+    circle_translation: Vector2<f32>,
 ) -> bool {
     (player_radius + circle_radius).powi(2)
         >= (player_translation - circle_translation).norm_squared()
@@ -114,12 +157,25 @@ fn in_circle(
 /// Add a collision from one entity to another
 ///
 /// If there is no collision component then add one with the collision
-fn add_collision(collisions: &mut WriteStorage<Collisions>, source: Entity, target: Entity) {
+fn add_collision(
+    pool: &mut Vec<Collisions>,
+    collisions: &mut WriteStorage<Collisions>,
+    source: Entity,
+    target: Entity,
+) {
     let component = collisions.get_mut(target);
     if let Some(c) = component {
         c.insert(source, CollisionData);
     } else {
-        let mut c = Collisions::default();
+        // If there are extra elements in the pool then reset the element
+        // and use it or create a new one
+        let mut c = if let Some(mut c) = pool.pop() {
+            c.reset();
+            c
+        } else {
+            Collisions::default()
+        };
+
         c.insert(source, CollisionData);
 
         collisions.insert(target, c).unwrap();

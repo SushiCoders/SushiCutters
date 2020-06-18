@@ -64,6 +64,15 @@ impl Collisions {
         }
     }
 
+    pub fn reset(&mut self) {
+        // SAFETY: Clean is safe if called with a valid bitset
+        #[allow(unsafe_code)]
+        unsafe {
+            self.entries.clean(&self.bitset);
+        }
+        self.bitset.clear();
+    }
+
     pub const fn mask(&self) -> &BitSet {
         &self.bitset
     }
