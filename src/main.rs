@@ -19,6 +19,7 @@ use amethyst::{
         RenderingBundle,
     },
     utils::application_root_dir,
+    StateEventReader,
 };
 
 mod components;
@@ -98,7 +99,11 @@ fn main() -> amethyst::Result<()> {
             &["collisions_system", "input_system"],
         );
 
-    let mut game = Application::build(assets_dir, initial_state())?
+    let mut game: CoreApplication<
+        GameData,
+        StateEvent<InputBindingTypes>,
+        StateEventReader<InputBindingTypes>,
+    > = CoreApplication::build(assets_dir, initial_state())?
         .with_frame_limit(FrameRateLimitStrategy::Unlimited, 144)
         .build(game_data)?;
     game.run();

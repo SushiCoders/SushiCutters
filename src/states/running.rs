@@ -6,6 +6,7 @@ use crate::{
 
 use amethyst::{core::transform::Transform, ecs::prelude::*, prelude::*, renderer::Camera};
 
+use crate::input::bindings::InputBindingTypes;
 #[cfg(feature = "benchmark")]
 use crate::util::frame_bench::FrameBench;
 
@@ -33,10 +34,9 @@ impl RunningState {
     }
 }
 
-impl SimpleState for RunningState {
+impl State<GameData<'static, 'static>, StateEvent<InputBindingTypes>> for RunningState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
-
         #[cfg(feature = "benchmark")]
         world.insert(FrameBench::default());
 
@@ -58,7 +58,10 @@ impl SimpleState for RunningState {
         }
     }
 
-    fn update(&mut self, _data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(
+        &mut self,
+        _data: StateData<GameData>,
+    ) -> Trans<GameData<'static, 'static>, StateEvent<InputBindingTypes>> {
         #[cfg(feature = "benchmark")]
         {
             use amethyst::core::Time;
@@ -70,10 +73,9 @@ impl SimpleState for RunningState {
             bench.advance_frame(time.delta_time().as_secs_f64());
 
             if time.absolute_time_seconds() > 30_f64 {
-                return SimpleTrans::Quit;
+                return Trans::Quit;
             }
         }
-
-        SimpleTrans::None
+        Trans::None
     }
 }

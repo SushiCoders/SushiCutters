@@ -24,7 +24,7 @@ impl Display for ActionBinding {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct InputBindingTypes;
 
 impl BindingTypes for InputBindingTypes {
