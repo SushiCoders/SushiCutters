@@ -63,11 +63,12 @@ impl<'s> System<'s> for CollisionsSystem {
         // We also check for the velocity of the ball every time, to prevent multiple collisions
         // from occurring.
         for (circle_entity, circle, circle_transform) in (&entities, &circles, &transforms).join() {
-            cache.push((circle_entity, circle, circle_transform));
-
             let translation = global_translation(circle_transform);
             let circle_x = translation.x;
             let circle_y = translation.y;
+
+            // Cache just the translation instead of the full transform
+            cache.push((circle_entity, circle, translation));
 
             // Bounce at the paddles.
             for (box_entity, box_col, box_transform) in (&entities, &boxes, &transforms).join() {
@@ -109,18 +110,26 @@ impl<'s> System<'s> for CollisionsSystem {
 
         // Pull circle data once and only once then iterate over it
         // Having the data cached is a lot cheaper than joining on it
-        for (i, circle) in cache.iter().enumerate() {
-            for other in cache[i + 1..].iter() {
-                let translation = global_translation(circle.2);
-                let other_translation = global_translation(other.2);
+        for (i, (circle_entity, circle, circle_translation)) in cache.iter().enumerate() {
+            for (other_entity, other_circle, other_translation) in cache[i + 1..].iter() {
                 if in_circle(
-                    other.1.radius,
-                    other_translation,
-                    circle.1.radius,
-                    translation,
+                    circle.radius,
+                    *circle_translation,
+                    other_circle.radius,
+                    *other_translation,
                 ) {
-                    add_collision(&mut self.collision_pool, &mut collisions, circle.0, other.0);
-                    add_collision(&mut self.collision_pool, &mut collisions, other.0, circle.0);
+                    add_collision(
+                        &mut self.collision_pool,
+                        &mut collisions,
+                        *circle_entity,
+                        *other_entity,
+                    );
+                    add_collision(
+                        &mut self.collision_pool,
+                        &mut collisions,
+                        *other_entity,
+                        *circle_entity,
+                    );
                 }
             }
         }
@@ -142,13 +151,13 @@ fn point_in_rect(x: f32, y: f32, left: f32, bottom: f32, right: f32, top: f32) -
 }
 
 fn in_circle(
-    player_radius: f32,
-    player_translation: Vector2<f32>,
     circle_radius: f32,
     circle_translation: Vector2<f32>,
+    other_radius: f32,
+    other_translation: Vector2<f32>,
 ) -> bool {
-    (player_radius + circle_radius).powi(2)
-        >= (player_translation - circle_translation).norm_squared()
+    (circle_radius + other_radius).powi(2)
+        >= (circle_translation - other_translation).norm_squared()
 }
 
 /// Add a collision from one entity to another
