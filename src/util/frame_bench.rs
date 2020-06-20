@@ -78,6 +78,10 @@ pub struct FrameBench {
 }
 
 impl FrameBench {
+    pub fn should_end(&self) -> bool {
+        self.main.total >= 30.0
+    }
+
     pub fn advance_frame(&mut self, delta_time: f64) {
         self.main.advance_frame(delta_time);
     }

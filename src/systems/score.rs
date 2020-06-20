@@ -46,7 +46,7 @@ impl<'a, 'b> SystemDesc<'a, 'b, ScoreSystem> for ScoreSystemDesc {
             0_f32,
             0_f32,
             0_f32,
-            200_f32,
+            100e20_f32,
             50_f32,
         );
         let player_score_entity = world
