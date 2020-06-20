@@ -91,10 +91,11 @@ pub fn initialize_enemies_scaled(world: &mut World) {
 
     let area = ARENA_WIDTH * ARENA_HEIGHT;
     // We want circles to cover 80% of the area
-    #[allow(clippy::cast_precision_loss)]
-    let size = ((area * area_scale) / (enemy_count as f32 * std::f32::consts::PI)).sqrt();
 
-    initialize_enemies(world, enemy_count, size);
+    #[allow(clippy::cast_precision_loss)]
+    let radius = ((area * area_scale) / (enemy_count as f32 * std::f32::consts::PI)).sqrt();
+
+    initialize_enemies(world, enemy_count, radius);
 }
 
 fn get_variable<F: std::str::FromStr>(variable: &str, default: F) -> F {
@@ -118,13 +119,13 @@ fn get_area_scale() -> f32 {
     get_variable("AREA_SCALE", 0.8)
 }
 
-fn initialize_enemies(world: &mut World, count: usize, size: f32) {
+fn initialize_enemies(world: &mut World, count: usize, radius: f32) {
     use rand::distributions::{Distribution, Uniform};
     let mut rng = rand::thread_rng();
     let direction = Uniform::new(-1.0, 1.0);
-    let velocity = Uniform::new(f32::EPSILON, 12.5 * size);
-    let enemy_x = Uniform::new(size, ARENA_WIDTH - size);
-    let enemy_y = Uniform::new(size, ARENA_HEIGHT - size);
+    let velocity = Uniform::new(f32::EPSILON, 12.5 * radius);
+    let enemy_x = Uniform::new(radius, ARENA_WIDTH - radius);
+    let enemy_y = Uniform::new(radius, ARENA_HEIGHT - radius);
     for _ in 1..=count {
         enemy::spawn_enemy(
             world,
@@ -132,7 +133,7 @@ fn initialize_enemies(world: &mut World, count: usize, size: f32) {
             enemy_y.sample(&mut rng),
             direction.sample(&mut rng) * velocity.sample(&mut rng),
             direction.sample(&mut rng) * velocity.sample(&mut rng),
-            size,
+            radius,
         );
     }
 }

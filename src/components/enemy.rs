@@ -21,14 +21,14 @@ pub fn spawn_enemy(
     enemy_y: f32,
     x_vel: f32,
     y_vel: f32,
-    size: f32,
+    radius: f32,
 ) {
     trace!("Spawning an enemy");
     let mut t = Transform::default();
     t.set_translation_xyz(enemy_x, enemy_y, 0.0);
     world
         .create_entity()
-        .with(CircleCollider { radius: size })
+        .with(CircleCollider { radius })
         .with(Enemy)
         .with(Velocity {
             value: Vector3::new(x_vel, y_vel, 0.0),
