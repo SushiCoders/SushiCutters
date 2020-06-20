@@ -73,7 +73,7 @@ impl<'s> System<'s> for CollisionDebugSystem {
         for (circle, transform, collision, enemy) in
             (&circles, &transforms, collisions.maybe(), enemies.maybe()).join()
         {
-            let circle_point = Point3::from(global_translation(transform));
+            let circle_point = Point3::from(global_translation(transform).to_homogeneous());
 
             let color = if collision.is_some() {
                 red
@@ -88,7 +88,7 @@ impl<'s> System<'s> for CollisionDebugSystem {
 
         for (box_collider, transform, collision) in (&boxes, &transforms, collisions.maybe()).join()
         {
-            let translation = global_translation(transform);
+            let translation = global_translation(transform).to_homogeneous();
             let half_box =
                 Vector3::new(box_collider.width / 2_f32, box_collider.height / 2_f32, 0.0);
 

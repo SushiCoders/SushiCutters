@@ -1,10 +1,7 @@
 #![allow(clippy::type_repetition_in_bounds)]
 
 use amethyst::{
-    core::{
-        math::{Vector2, Vector3},
-        Transform,
-    },
+    core::{math::Vector2, Transform},
     ecs::prelude::*,
 };
 
@@ -75,7 +72,7 @@ impl<'s> System<'s> for CollisionsSystem {
             // Bounce at the paddles.
             for (box_entity, box_col, box_transform) in (&entities, &boxes, &transforms).join() {
                 let translation = global_translation(box_transform);
-                let half_box = Vector3::new(box_col.width / 2_f32, box_col.height / 2_f32, 0.0);
+                let half_box = Vector2::new(box_col.width / 2_f32, box_col.height / 2_f32);
                 let top_left = translation - half_box;
                 let box_x = top_left.x;
                 let box_y = top_left.y;
@@ -118,9 +115,9 @@ impl<'s> System<'s> for CollisionsSystem {
                 let other_translation = global_translation(other.2);
                 if in_circle(
                     other.1.radius,
-                    other_translation.xy(),
+                    other_translation,
                     circle.1.radius,
-                    translation.xy(),
+                    translation,
                 ) {
                     add_collision(&mut self.collision_pool, &mut collisions, circle.0, other.0);
                     add_collision(&mut self.collision_pool, &mut collisions, other.0, circle.0);
