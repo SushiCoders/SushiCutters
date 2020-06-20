@@ -81,6 +81,7 @@ pub fn initialize_enemies_bench(world: &mut World) {
 
 pub fn initialize_enemies_scaled(world: &mut World) {
     let enemy_count = get_enemy_count();
+    // The percentage of the screen that should be covered in colliders
     let area_scale = get_area_scale();
 
     log::info!(
@@ -90,7 +91,6 @@ pub fn initialize_enemies_scaled(world: &mut World) {
     );
 
     let area = ARENA_WIDTH * ARENA_HEIGHT;
-    // We want circles to cover 80% of the area
 
     #[allow(clippy::cast_precision_loss)]
     let radius = ((area * area_scale) / (enemy_count as f32 * std::f32::consts::PI)).sqrt();
@@ -116,7 +116,7 @@ fn get_enemy_count() -> usize {
 }
 
 fn get_area_scale() -> f32 {
-    get_variable("AREA_SCALE", 0.8)
+    get_variable("AREA_SCALE", 0.4)
 }
 
 fn initialize_enemies(world: &mut World, count: usize, radius: f32) {
