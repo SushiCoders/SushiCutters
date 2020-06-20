@@ -23,6 +23,7 @@ use amethyst::{
 
 mod components;
 mod input;
+mod resources;
 mod scenes;
 mod states;
 mod sushi_cutters;
