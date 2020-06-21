@@ -3402,10 +3402,10 @@ name = "sushi_cutters"
 version = "0.1.0"
 dependencies = [
  "amethyst",
- "bumpalo",
  "cargo-husky",
  "log",
  "rand 0.7.3",
+ "rayon",
  "serde",
 ]
 

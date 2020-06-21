@@ -4,6 +4,8 @@ use amethyst::{
     core::{math::Vector2, Transform},
     ecs::prelude::*,
 };
+use rayon::prelude::*;
+use std::mem;
 
 use crate::components::{BoxCollider, CircleCollider, CollisionData, Collisions};
 use crate::util::transform::global_translation;
@@ -13,10 +15,30 @@ use crate::util::frame_bench::FrameBench;
 
 type CacheRow<'s> = (Entity, &'s CircleCollider, Vector2<f32>);
 
+const STARTING_CAPACITY: usize = 500;
+
 #[derive(Default)]
 pub struct CollisionsSystem {
     collision_pool: Vec<Collisions>,
-    allocator: bumpalo::Bump,
+    allocator: (usize, usize, usize),
+}
+
+impl Drop for CollisionsSystem {
+    fn drop(&mut self) {
+        if self.allocator.0 != 0 {
+            // SAFETY: Using the parts of an existing Vec is safe
+            // We allocate it once then reuse the memory that we allocated
+            #[allow(unsafe_code)]
+            unsafe {
+                // Build a vec and let it drop itself
+                Vec::from_raw_parts(
+                    self.allocator.0 as *mut CacheRow,
+                    self.allocator.1,
+                    self.allocator.2,
+                );
+            }
+        }
+    }
 }
 
 #[derive(SystemData)]
@@ -57,8 +79,21 @@ impl<'s> System<'s> for CollisionsSystem {
             self.collision_pool.push(x);
         }
 
-        // Create a new cache on the top of the prereserved memory
-        let mut cache = bumpalo::collections::Vec::new_in(&self.allocator);
+        // Build a new cache or reuse the old one
+        let mut cache = if self.allocator.0 == 0 {
+            mem::ManuallyDrop::new(Vec::with_capacity(STARTING_CAPACITY))
+        } else {
+            // SAFETY: Using the parts of an existing Vec is safe
+            // We allocate it once then reuse the memory that we allocated
+            #[allow(unsafe_code)]
+            unsafe {
+                mem::ManuallyDrop::new(Vec::from_raw_parts(
+                    self.allocator.0 as *mut CacheRow,
+                    self.allocator.1,
+                    self.allocator.2,
+                ))
+            }
+        };
 
         // Check whether a ball collided, and bounce off accordingly.
         //
@@ -114,22 +149,28 @@ impl<'s> System<'s> for CollisionsSystem {
 
         // Pull circle data once and only once then iterate over it
         // Having the data cached is a lot cheaper than joining on it
-        for (i, circle) in cache.iter().enumerate() {
-            handle_circle_row(&cache[..], i, circle)
-                .into_iter()
-                .for_each(|(entity_a, entity_b)| {
-                    add_collision(pool, &mut collisions, *entity_a, *entity_b);
-                    add_collision(pool, &mut collisions, *entity_b, *entity_a);
-                });
-        }
+        cache
+            .par_iter()
+            .enumerate()
+            .map(|(i, circle)| handle_circle_row(&cache[..], i, circle))
+            .flatten()
+            .collect::<Vec<(&Entity, &Entity)>>()
+            .into_iter()
+            .for_each(|(entity_a, entity_b)| {
+                add_collision(pool, &mut collisions, *entity_a, *entity_b);
+                add_collision(pool, &mut collisions, *entity_b, *entity_a);
+            });
 
         // Clear the cache to drop all the values
         // This will probably be optimized out since afaik since references
         // and entities don't have anything that they need to drop yet
         cache.clear();
-        // Drop needs to be explicit so that we can reset the allocator pointer
-        drop(cache);
-        self.allocator.reset();
+
+        let p = cache.as_mut_ptr() as usize;
+        let len = cache.len();
+        let cap = cache.capacity();
+
+        self.allocator = (p, len, cap);
     }
 }
 
