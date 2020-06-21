@@ -16,6 +16,8 @@ use crate::util::frame_bench::FrameBench;
 type CacheRow<'s> = (Entity, &'s CircleCollider, Vector2<f32>);
 
 const STARTING_CAPACITY: usize = 500;
+// Based on profiling the sweet spot seems to be about 500 right now
+const PARALLEL_CUTOFF: usize = 500;
 
 #[derive(Default)]
 pub struct CollisionsSystem {
@@ -24,6 +26,7 @@ pub struct CollisionsSystem {
 }
 
 impl Drop for CollisionsSystem {
+    // Drop the memory that was allocated for the cache
     fn drop(&mut self) {
         if self.allocator.0 != 0 {
             // SAFETY: Using the parts of an existing Vec is safe
@@ -147,25 +150,36 @@ impl<'s> System<'s> for CollisionsSystem {
 
         let pool = &mut self.collision_pool;
 
-        // Pull circle data once and only once then iterate over it
-        // Having the data cached is a lot cheaper than joining on it
-        cache
-            .par_iter()
-            .enumerate()
-            .map(|(i, circle)| handle_circle_row(&cache[..], i, circle))
-            .flatten()
-            .collect::<Vec<(&Entity, &Entity)>>()
-            .into_iter()
-            .for_each(|(entity_a, entity_b)| {
-                add_collision(pool, &mut collisions, *entity_a, *entity_b);
-                add_collision(pool, &mut collisions, *entity_b, *entity_a);
+        // Parallel is slower for small quantities of enemies
+        if cache.len() > PARALLEL_CUTOFF {
+            // Pull circle data once and only once then iterate over it
+            // Having the data cached is a lot cheaper than joining on it
+            cache
+                .par_iter()
+                .enumerate()
+                .map(|(i, circle)| handle_circle_row(&cache[..], i, circle))
+                .flatten()
+                .collect::<Vec<(&Entity, &Entity)>>()
+                .into_iter()
+                .for_each(|(entity_a, entity_b)| {
+                    add_collision(pool, &mut collisions, *entity_a, *entity_b);
+                    add_collision(pool, &mut collisions, *entity_b, *entity_a);
+                });
+        } else {
+            cache.iter().enumerate().for_each(|(i, circle)| {
+                for (entity_a, entity_b) in handle_circle_row(&cache[..], i, circle) {
+                    add_collision(pool, &mut collisions, *entity_a, *entity_b);
+                    add_collision(pool, &mut collisions, *entity_b, *entity_a);
+                }
             });
+        }
 
         // Clear the cache to drop all the values
         // This will probably be optimized out since afaik since references
         // and entities don't have anything that they need to drop yet
         cache.clear();
 
+        // Store the allocated memory in a location that doesn't care about lifetimes
         let p = cache.as_mut_ptr() as usize;
         let len = cache.len();
         let cap = cache.capacity();
