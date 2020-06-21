@@ -11,6 +11,8 @@ use crate::util::transform::global_translation;
 #[cfg(feature = "benchmark")]
 use crate::util::frame_bench::FrameBench;
 
+type CacheRow<'s> = (Entity, &'s CircleCollider, Vector2<f32>);
+
 #[derive(Default)]
 pub struct CollisionsSystem {
     collision_pool: Vec<Collisions>,
@@ -108,30 +110,17 @@ impl<'s> System<'s> for CollisionsSystem {
             }
         }
 
+        let pool = &mut self.collision_pool;
+
         // Pull circle data once and only once then iterate over it
         // Having the data cached is a lot cheaper than joining on it
-        for (i, (circle_entity, circle, circle_translation)) in cache.iter().enumerate() {
-            for (other_entity, other_circle, other_translation) in cache[i + 1..].iter() {
-                if in_circle(
-                    circle.radius,
-                    *circle_translation,
-                    other_circle.radius,
-                    *other_translation,
-                ) {
-                    add_collision(
-                        &mut self.collision_pool,
-                        &mut collisions,
-                        *circle_entity,
-                        *other_entity,
-                    );
-                    add_collision(
-                        &mut self.collision_pool,
-                        &mut collisions,
-                        *other_entity,
-                        *circle_entity,
-                    );
-                }
-            }
+        for (i, circle) in cache.iter().enumerate() {
+            handle_circle_row(&cache[..], i, circle)
+                .into_iter()
+                .for_each(|(entity_a, entity_b)| {
+                    add_collision(pool, &mut collisions, *entity_a, *entity_b);
+                    add_collision(pool, &mut collisions, *entity_b, *entity_a);
+                });
         }
 
         // Clear the cache to drop all the values
@@ -142,6 +131,26 @@ impl<'s> System<'s> for CollisionsSystem {
         drop(cache);
         self.allocator.reset();
     }
+}
+
+fn handle_circle_row<'s>(
+    cache: &'s [CacheRow],
+    index: usize,
+    (ref circle_entity, circle, circle_translation): &'s CacheRow,
+) -> Vec<(&'s Entity, &'s Entity)> {
+    let mut results = Vec::new();
+    for (other_entity, other_circle, other_translation) in (*cache)[index + 1..].iter() {
+        if in_circle(
+            circle.radius,
+            *circle_translation,
+            other_circle.radius,
+            *other_translation,
+        ) {
+            results.push((circle_entity, other_entity))
+        }
+    }
+
+    results
 }
 
 // A point is in a box when its coordinates are smaller or equal than the top
