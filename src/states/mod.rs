@@ -1,3 +1,4 @@
+use crate::input::bindings::InputBindingTypes;
 use crate::resources::prefabs::UiPrefabRegistry;
 use crate::scenes;
 use amethyst::{
@@ -11,7 +12,7 @@ use std::fs::read_dir;
 mod running;
 mod scene_select;
 
-pub fn initial_state() -> impl SimpleState {
+pub fn initial_state() -> impl State<GameData<'static, 'static>, StateEvent<InputBindingTypes>> {
     LoadingState::default()
 }
 
@@ -36,7 +37,7 @@ pub struct LoadingState {
     prefab_loading_progress: Option<ProgressCounter>,
 }
 
-impl SimpleState for LoadingState {
+impl State<GameData<'static, 'static>, StateEvent<InputBindingTypes>> for LoadingState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let mut progress_counter = ProgressCounter::new();
         {
@@ -71,14 +72,17 @@ impl SimpleState for LoadingState {
     }
     // This is called once to decide which scene selection method we use
     // Either scene select or load a scene from cli
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(
+        &mut self,
+        data: StateData<GameData>,
+    ) -> Trans<GameData<'static, 'static>, StateEvent<InputBindingTypes>> {
         data.data.update(data.world);
         if let Some(counter) = self.prefab_loading_progress.as_ref() {
             if counter.is_complete() {
                 return if let Some(state) = get_scene_cli() {
-                    SimpleTrans::Switch(Box::new(state))
+                    Trans::Switch(Box::new(state))
                 } else {
-                    SimpleTrans::Switch(Box::new(scene_select::SceneSelectState::default()))
+                    Trans::Switch(Box::new(scene_select::SceneSelectState::default()))
                 };
             }
         }
