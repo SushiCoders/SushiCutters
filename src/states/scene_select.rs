@@ -6,8 +6,6 @@ use amethyst::{
 
 use crate::{input::bindings::InputBindingTypes, resources::prefabs::UiPrefabRegistry};
 
-use std::process;
-
 #[derive(Default)]
 pub struct SceneSelectState {
     root: Option<Entity>,
@@ -50,7 +48,7 @@ impl State<GameData<'static, 'static>, StateEvent<InputBindingTypes>> for SceneS
                 target,
             }) => {
                 if Some(target) == self.quit {
-                    process::exit(0);
+                    Trans::Quit
                 }
                 // TODO: Handle scenes
                 else {
@@ -65,6 +63,8 @@ impl State<GameData<'static, 'static>, StateEvent<InputBindingTypes>> for SceneS
         &mut self,
         data: StateData<GameData>,
     ) -> Trans<GameData<'static, 'static>, StateEvent<InputBindingTypes>> {
+        // Update the world so any UI elements are loaded before we look for them
+        // Seems like root loading is lazy
         data.data.update(data.world);
         if self.quit.is_none() || self.basic.is_none() || self.enemies.is_none() {
             data.world.exec(|ui_finder: UiFinder<'_>| {

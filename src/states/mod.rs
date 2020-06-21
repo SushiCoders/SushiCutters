@@ -12,7 +12,7 @@ use std::fs::read_dir;
 mod running;
 mod scene_select;
 
-pub fn initial_state() -> LoadingState {
+pub fn initial_state() -> impl State<GameData<'static, 'static>, StateEvent<InputBindingTypes>> {
     LoadingState::default()
 }
 
