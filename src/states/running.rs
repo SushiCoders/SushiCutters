@@ -69,7 +69,7 @@ impl SimpleState for RunningState {
             // only starts counting AFTER everything is initialized
             bench.advance_frame(time.delta_time().as_secs_f64());
 
-            if time.absolute_time_seconds() > 30_f64 {
+            if bench.should_end() {
                 return SimpleTrans::Quit;
             }
         }
